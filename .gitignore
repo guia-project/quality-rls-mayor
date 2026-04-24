@@ -1,0 +1,37 @@
+# ======================
+# IntelliJ
+# ======================
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ======================
+# BACKEND (Spring Boot)
+# ======================
+backend/target/
+backend/*.log
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# ======================
+# FRONTEND (Angular)
+# ======================
+front/node_modules/
+front/dist/
+front/.angular/
+front/*.log
+
+# ======================
+# GENERAL
+# ======================
+*.log
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Cache / temp
+tmp/
+out/
+coverage/
