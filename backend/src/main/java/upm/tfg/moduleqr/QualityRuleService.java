@@ -8,7 +8,6 @@ import upm.tfg.exception.CsvProcessingException;
 import upm.tfg.exception.NotFoundException;
 import upm.tfg.exception.QualityRuleViolationException;
 import org.apache.commons.csv.*;
-import org.apache.commons.csv.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class QualityRuleService {
@@ -92,7 +90,7 @@ public class QualityRuleService {
 
 
     public ByteArrayInputStream exportToCsv() throws IOException {
-        List<QualityRule> rules = qualityRuleRepository.findAll();
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
