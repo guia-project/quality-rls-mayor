@@ -1,4 +1,6 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.Validation;
+
+import upm.tfg.moduleqr.model.RuleType;
 
 public interface QRValidator {
 

@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.Validation;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -8,6 +8,7 @@ import org.apache.jena.riot.RDFParser;
 import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.ValidationReport;
 import org.springframework.stereotype.Component;
+import upm.tfg.moduleqr.model.RuleType;
 
 import java.io.StringReader;
 

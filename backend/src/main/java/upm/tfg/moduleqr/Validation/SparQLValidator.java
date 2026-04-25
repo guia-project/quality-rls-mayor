@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.Validation;
 
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -9,6 +9,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
 import org.springframework.stereotype.Component;
+import upm.tfg.moduleqr.model.RuleType;
 
 @Component
 public class SparQLValidator implements QRValidator {

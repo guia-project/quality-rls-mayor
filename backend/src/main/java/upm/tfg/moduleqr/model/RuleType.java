@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.model;
 
 public enum RuleType {
     SHACL,

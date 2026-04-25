@@ -1,6 +1,7 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.Validation;
 
 import org.springframework.stereotype.Service;
+import upm.tfg.moduleqr.model.RuleType;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class QRValidation {
 
     }
 
-    public boolean validateRule(String content,RuleType ruleType) {
+    public boolean validateRule(String content, RuleType ruleType) {
 
         QRValidator validator = validators.stream()
                 .filter(v -> v.isType(ruleType))

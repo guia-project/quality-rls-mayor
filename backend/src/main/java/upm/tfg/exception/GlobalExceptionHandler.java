@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.io.IOException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -17,23 +16,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<String> handleNotFound(NotFoundException ex) {
-        return ResponseEntity.status(404).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     @ExceptionHandler(QualityRuleViolationException.class)
     public ResponseEntity<String> handleQrViolation(QualityRuleViolationException ex) {
-        return ResponseEntity.status(422).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(ex.getMessage());
     }
 
     @ExceptionHandler(CsvProcessingException.class)
-    public ResponseEntity<?> handleCsvException(CsvProcessingException ex) {
+    public ResponseEntity<String> handleCsvException(CsvProcessingException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
-
     }
 
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<?> handleIOException(IOException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al leer el archivo CSV");
+    @ExceptionHandler(KnowledgeGraphException.class)
+    public ResponseEntity<String> handleKnowledgeGraphException(KnowledgeGraphException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ex.getMessage());
+    }
 
+    @ExceptionHandler(DocumentGenerationException.class)
+    public ResponseEntity<String> DocumentGenerationExceptionException(DocumentGenerationException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 }
