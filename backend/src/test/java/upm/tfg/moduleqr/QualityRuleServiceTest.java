@@ -129,7 +129,7 @@ class QualityRuleServiceTest {
         QualityRuleService spy = Mockito.spy(service);
         doReturn("graph").when(spy).fetchGraphContent(any());
         when(repository.findAll()).thenReturn(List.of(rule));
-        when(validator.validateKnowledgeGraph(any(), any(), any())).thenReturn(false);
+        when(validator.validateKnowledgeGraph(any(), any(), any())).thenReturn(true);
         when(csvService.exportResultCsv(any())).thenReturn(new ByteArrayInputStream(new byte[0]));
         ByteArrayInputStream result = spy.validateGraph("url", "csv");
 
