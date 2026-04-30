@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+
+  backend:
+    build: ./backend
+    container_name: spring-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - h2-data:/app/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: angular-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  h2-data:

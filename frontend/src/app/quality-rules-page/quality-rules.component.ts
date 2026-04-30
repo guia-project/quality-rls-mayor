@@ -24,7 +24,7 @@ export interface QualityRule {
   styleUrls: ['./quality-rules.component.scss'],
 })
 export class QualityRulesComponent implements OnInit {
-  private readonly API = 'http://localhost:8080/qr'
+  private readonly API = '/api/qr'
 
 
   /* ── State ── */
