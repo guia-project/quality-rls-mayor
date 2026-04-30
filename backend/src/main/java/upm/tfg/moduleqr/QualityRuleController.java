@@ -23,29 +23,35 @@ public class QualityRuleController {
 
     @PostMapping
     public ResponseEntity<Void> createQualityRule(@RequestBody QrDto request) {
+        System.out.println("Create Quality Rule");
         service.createQualityRule(request.getContent(),request.getType(),request.getName(),request.getDescription());
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity <QualityRule> getQualityRule(@PathVariable String id) {
-        QualityRule qualityRule = service.getQualityRule(id);
-        return ResponseEntity.ok(qualityRule);
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(@PathVariable String id, @RequestBody QrDto dto) {
+        System.out.println("Update Quality Rule");
+        service.updateQualityRule(id, dto);
+        return ResponseEntity.noContent().build();
     }
+
 
     @GetMapping()
     public ResponseEntity<List<QualityRule>> getQualityRules() {
+        System.out.println("Get Quality Rules");
         return ResponseEntity.ok(service.getQualityRules());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity <Void> deleteGraph(@PathVariable String id) {
+        System.out.println("Delete Quality Rule");
         service.deleteQualityRule(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/validate/{url}/{tipo}")
-    public ResponseEntity<InputStreamResource> validateGraph(@PathVariable String url, @PathVariable String tipo) {
+    @GetMapping("/validate")
+    public ResponseEntity<InputStreamResource> validateGraph(@RequestParam String url, @RequestParam String tipo) {
+        System.out.println("Validate Quality Rule");
         ByteArrayInputStream stream = service.validateGraph(url, tipo);
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
@@ -73,6 +79,7 @@ public class QualityRuleController {
 
     @PostMapping("/upload")
     public ResponseEntity<Void> upload(@RequestParam MultipartFile file) {
+        System.out.println("Upload Quality Rule");
         service.createQrFromCsv(file);
         return ResponseEntity.noContent().build();
 
@@ -80,6 +87,7 @@ public class QualityRuleController {
 
     @GetMapping("/export")
     public ResponseEntity<InputStreamResource> exportCsv(){
+        System.out.println("Export Quality Rule");
         ByteArrayInputStream csv = service.exportQrToCsv();
         String filename = "quality_rules_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".csv";
         return ResponseEntity.ok()

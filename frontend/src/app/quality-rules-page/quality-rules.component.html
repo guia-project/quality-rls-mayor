@@ -1,0 +1,311 @@
+<div class="qr-shell">
+
+  <!-- Sidebar -->
+  <aside class="qr-sidebar">
+    <div class="sidebar-logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+        <rect width="30" height="30" rx="9" fill="#111"/>
+        <path d="M8 15L12.5 19.5L22 10" stroke="#E8FF47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="logo-text">QualityGraph</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/>
+        </svg>
+        Reglas
+      </a>
+      <a class="nav-item" (click)="openAbout()">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M8 6h.01M8 9v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        About
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="qr-main">
+
+    <!-- Header -->
+    <header class="qr-header">
+      <div class="header-left">
+        <h1 class="page-title">Reglas de Calidad</h1>
+        <span class="rule-count">{{ filteredRules().length }} reglas</span>
+      </div>
+      <div class="header-actions">
+        <label class="btn-upload" [class.uploading]="isUploading">
+          <input type="file" accept=".csv" (change)="onCsvUpload($event)" hidden/>
+          <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 1v9M4 6l3.5-4 3.5 4M2 11h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ isUploading ? 'Subiendo...' : 'Subir CSV' }}
+        </label>
+        <button class="btn-upload" (click)="exportCsv()">
+          <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 14V5M11 9L7.5 13 4 9M2 3h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+
+          Descargar CSV
+
+        </button>
+        <button class="btn-validate" (click)="openValidateModal()">
+          <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+            <circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Validar Grafo
+        </button>
+        <button class="btn-primary" (click)="openNewRule()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Nueva regla
+        </button>
+      </div>
+    </header>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Buscar por nombre..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+        <button *ngIf="searchQuery()" class="search-clear" (click)="searchQuery.set('')">×</button>
+      </div>
+      <div class="filter-chips">
+        <button
+          class="chip"
+          [class.active]="activeFilter() === 'ALL'"
+          (click)="activeFilter.set('ALL')"
+        >
+          Todas
+        </button>
+        <button
+          *ngFor="let type of ruleTypes"
+          class="chip"
+          [class.active]="activeFilter() === type"
+          (click)="activeFilter.set(type)"
+        >
+          {{ type }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-value">{{ rules().length }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div *ngFor="let type of ruleTypes" class="stat-card stat-type">
+        <span class="stat-value">{{ countByType(type) }}</span>
+        <span class="stat-label">{{ type }}</span>
+      </div>
+    </div>
+
+    <!-- Rules table -->
+    <div class="rules-table-wrap">
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th class="col-name">Nombre</th>
+            <th class="col-type">Tipo</th>
+            <th class="col-desc">Descripción</th>
+            <th class="col-content">Contenido</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let rule of filteredRules(); trackBy: trackById"
+            class="rule-row"
+          >
+            <td class="col-name">
+              <span class="rule-name">{{ rule.name }}</span>
+              <span class="rule-id">{{ rule.id }}</span>
+            </td>
+            <td class="col-type">
+              <span class="type-badge">{{ rule.ruleType }}</span>
+            </td>
+            <td class="col-desc">
+              <span class="rule-desc">{{ rule.description }}</span>
+            </td>
+            <td class="col-content">
+              <button class="content-preview" (click)="viewContent(rule)">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1 6C2.5 3.5 4 2 6 2s3.5 1.5 5 4c-1.5 2.5-3 4-5 4S2.5 8.5 1 6z" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+                Ver contenido
+              </button>
+            </td>
+            <td class="col-actions">
+              <button class="action-btn edit-btn" (click)="editRule(rule)">
+                <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+                  <path d="M9.5 1.5l2 2L4 11H2v-2L9.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                </svg>
+                Editar
+              </button>
+              <button class="action-btn delete-btn" (click)="deleteRule(rule.id)">
+                <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+                  <path d="M2 3.5h9M5 3.5V2h3v1.5M5.5 6v4M7.5 6v4M3.5 3.5L4 11h5l.5-7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Eliminar
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredRules().length === 0">
+            <td colspan="6" class="empty-state">
+              <div class="empty-inner">
+                <svg width="38" height="38" viewBox="0 0 40 40" fill="none">
+                  <rect x="8" y="10" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 2"/>
+                  <circle cx="20" cy="22" r="3" fill="currentColor" opacity=".2"/>
+                </svg>
+                <p>No se encontraron reglas</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── Edit / New Rule Modal ─── -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingRule?.id ? 'Editar regla' : 'Nueva regla' }}</h2>
+      <button class="modal-close" (click)="closeModal()">×</button>
+    </div>
+    <div class="modal-body" *ngIf="editingRule">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" [(ngModel)]="editingRule.name" placeholder="Nombre de la regla"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de regla</label>
+          <select [(ngModel)]="editingRule.ruleType">
+            <option *ngFor="let t of ruleTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <input type="text" [(ngModel)]="editingRule.description" placeholder="Descripción de la regla"/>
+      </div>
+      <div class="form-group">
+        <label>Contenido</label>
+        <textarea [(ngModel)]="editingRule.content" rows="5" placeholder="Contenido de la regla (hasta 5000 caracteres)..."></textarea>
+        <span class="char-counter">{{ editingRule.content?.length || 0 }} / 5000</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModal()">Cancelar</button>
+      <button class="btn-primary" (click)="saveRule()">Guardar regla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Content View Modal ─── -->
+<div class="modal-overlay" *ngIf="showContentModal" (click)="closeContentModal()">
+  <div class="modal modal-content-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>{{ contentViewRule?.name }}</h2>
+        <span class="type-badge" style="margin-top:4px;display:inline-block;">{{ contentViewRule?.ruleType }}</span>
+      </div>
+      <button class="modal-close" (click)="closeContentModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <pre class="content-block">{{ contentViewRule?.content }}</pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeContentModal()">Cerrar</button>
+      <button class="btn-primary" (click)="editRule(contentViewRule!); closeContentModal()">Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Validate Graph Modal ─── -->
+<div class="modal-overlay" *ngIf="showValidateModal" (click)="closeValidateModal()">
+  <div class="modal modal-validate" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Validar grafo de conocimiento</h2>
+      <button class="modal-close" (click)="closeValidateModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Endpoint</label>
+        <input type="url" [(ngModel)]="validateEndpoint" placeholder="https://example.com/"/>
+      </div>
+
+      <div class="validate-result" *ngIf="validateResult">
+        <div class="result-badge" [class]="'result-' + validateResult.status">
+          <svg *ngIf="validateResult.status==='success'" width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg *ngIf="validateResult.status==='error'" width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ validateResult.message }}
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeValidateModal()">Cancelar</button>
+      <button class="btn-validate" [disabled]="isValidating" (click)="validateGraph('pdf')">
+        {{ isValidating ? 'Generando PDF...' : 'Descargar PDF' }}
+      </button>
+      <button class="btn-validate" [disabled]="isValidating" (click)="validateGraph('csv')">
+        {{ isValidating ? 'Generando CSV...' : 'Descargar CSV' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" [class.toast-show]="toast.show" [ngClass]="'toast-' + toast.type">
+  {{ toast.message }}
+</div>
+
+<!-- ─── About Modal ─── -->
+<div class="modal-overlay" *ngIf="showAboutModal" (click)="closeAboutModal()">
+  <div class="modal modal-about" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>About</h2>
+      <button class="modal-close" (click)="closeAboutModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p><strong>QualityGraph</strong></p>
+      <p>Aplicación para gestión y validación de grafos de conocimiento</p>
+      <div style="margin-top:12px;">
+        <p><strong>Funcionalidades:</strong></p>
+        <p>Gestión de reglas SPARQL / SHACL</p>
+        <p>Validación de grafos</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeAboutModal()">Cerrar</button>
+    </div>
+  </div>
+</div>

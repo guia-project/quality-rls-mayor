@@ -8,6 +8,8 @@ import sparql.streamline.core.SparqlEndpointConfiguration;
 import sparql.streamline.exception.SparqlConfigurationException;
 import sparql.streamline.exception.SparqlQuerySyntaxException;
 import sparql.streamline.exception.SparqlRemoteEndpointException;
+import upm.tfg.documentmanager.CsvService;
+import upm.tfg.documentmanager.PdfService;
 import upm.tfg.exception.DocumentGenerationException;
 import upm.tfg.exception.KnowledgeGraphException;
 import upm.tfg.exception.NotFoundException;
@@ -22,8 +24,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static upm.tfg.documentmanager.PdfService.exportResultPdf;
-import static upm.tfg.documentmanager.CsvService.*;
 
 @Service
 public class QualityRuleService {
@@ -31,10 +31,15 @@ public class QualityRuleService {
 
     private final QRValidation validator;
     private final QualityRuleRepository repository;
+    private final PdfService pdfService;
 
-    public QualityRuleService(QRValidation validator, QualityRuleRepository repository) {
+    private final CsvService csvService;
+
+    public QualityRuleService(QRValidation validator, QualityRuleRepository repository, PdfService pdfService, CsvService csvService) {
         this.validator = validator;
         this.repository = repository;
+        this.pdfService = pdfService;
+        this.csvService = csvService;
     }
 
     public void createQualityRule(String content, RuleType type, String name, String description) {
@@ -47,6 +52,15 @@ public class QualityRuleService {
 
     public QualityRule getQualityRule(String id) {
         return repository.findById(id).orElseThrow(() -> new NotFoundException("Quality Rule con id " + id + " no encontrado"));
+    }
+
+    public void updateQualityRule(String id, QrDto dto) {
+        QualityRule rule = getQualityRule(id);
+        rule.setName(dto.getName());
+        rule.setDescription(dto.getDescription());
+        rule.setContent(dto.getContent());
+        rule.setRuleType(dto.getType());
+        repository.save(rule);
     }
 
     public List<QualityRule> getQualityRules() {
@@ -65,13 +79,8 @@ public class QualityRuleService {
         for (QualityRule rule : rules) {
             boolean passed;
             String message;
-            try {
-                passed = validator.validateKnowledgeGraph(graphContent, rule.getContent(), rule.getRuleType());
-                message = passed ? "El Knowledge Graph CUMPLE la regla." : "El Knowledge Graph NO CUMPLE la regla.";
-            } catch (Exception e) {
-                passed = false;
-                message = "Error al validar: " + e.getMessage();
-            }
+            passed = validator.validateKnowledgeGraph(graphContent, rule.getContent(), rule.getRuleType());
+            message = passed ? "El Knowledge Graph CUMPLE la regla." : "El Knowledge Graph NO CUMPLE la regla.";
             results.add(new ValidationResult(
                     rule.getId(),
                     rule.getName(),
@@ -82,9 +91,9 @@ public class QualityRuleService {
         }
         try {
             if ("pdf".equalsIgnoreCase(tipo)) {
-                return exportResultPdf(results);
+                return pdfService.exportResultPdf(results);
             } else {
-                return exportResultCsv(results);
+                return csvService.exportResultCsv(results);
             }
         } catch (Exception e) {
             throw new DocumentGenerationException("Error generando el informe de validación: " + e.getMessage());
@@ -93,7 +102,7 @@ public class QualityRuleService {
 
 
     public void createQrFromCsv(MultipartFile file){
-        List<QrDto> rules = createFromCsv(file);
+        List<QrDto> rules = csvService.createFromCsv(file);
         for (QrDto qr : rules) {
             createQualityRule(qr.getContent(), qr.getType(), qr.getName(), qr.getDescription());
         }
@@ -101,7 +110,7 @@ public class QualityRuleService {
     }
 
     public ByteArrayInputStream exportQrToCsv(){
-        return exportToCsv(repository.findAll());
+        return csvService.exportToCsv(repository.findAll());
     }
 
     private SparqlEndpoint createEndpoint(String url) {
@@ -111,7 +120,7 @@ public class QualityRuleService {
     }
 
     //Maybe tengo que ver lo de las queries
-    private String fetchGraphContent(String url) {
+    protected String fetchGraphContent(String url) {
         SparqlEndpoint endpoint = createEndpoint(url);
         try {
         ByteArrayOutputStream res = endpoint.query("TEMPORAL", ResultsFormat.FMT_RDF_TURTLE);

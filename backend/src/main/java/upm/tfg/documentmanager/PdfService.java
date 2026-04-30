@@ -9,6 +9,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import org.springframework.stereotype.Service;
 import upm.tfg.moduleqr.model.ValidationResult;
 
 import java.io.ByteArrayInputStream;
@@ -16,10 +17,10 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
+@Service
 public class PdfService {
 
-    public static ByteArrayInputStream exportResultPdf(List<ValidationResult> results){
+    public  ByteArrayInputStream exportResultPdf(List<ValidationResult> results){
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfWriter pdfWriter = new PdfWriter(out);
         PdfDocument pdfDoc    = new PdfDocument(pdfWriter);

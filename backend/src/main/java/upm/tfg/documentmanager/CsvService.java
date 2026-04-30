@@ -4,6 +4,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import upm.tfg.exception.CsvProcessingException;
 import upm.tfg.exception.DocumentGenerationException;
@@ -16,10 +17,10 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
+@Service
 public class CsvService {
 
-    public static List<QrDto> createFromCsv(MultipartFile file) {
+    public  List<QrDto> createFromCsv(MultipartFile file) {
         List<QrDto> res = new ArrayList<>();
         try {
             Reader reader = new InputStreamReader(file.getInputStream());
@@ -34,13 +35,13 @@ public class CsvService {
 
                 res.add(new QrDto(content, ruleType, name, description));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new CsvProcessingException("Error en la lectura del csv ");
         }
         return res;
     }
 
-    public static ByteArrayInputStream exportToCsv(List<QualityRule> rules){
+    public  ByteArrayInputStream exportToCsv(List<QualityRule> rules){
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
@@ -61,7 +62,7 @@ public class CsvService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    public static ByteArrayInputStream exportResultCsv(List<ValidationResult> results) {
+    public  ByteArrayInputStream exportResultCsv(List<ValidationResult> results) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (BufferedWriter writer = new BufferedWriter(
                 new OutputStreamWriter(out, StandardCharsets.UTF_8));
