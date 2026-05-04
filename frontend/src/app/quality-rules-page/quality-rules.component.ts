@@ -36,7 +36,7 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
 
   showEditModal     = false;
   showContentModal  = false;
-  showValidateModal = false;
+  showValidateModal = signal(false);
   showAboutModal = false;
 
   editingRule:     QualityRule | null = null;
@@ -106,20 +106,23 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     if (!this.editingRule || this.editingRule.ruleType !== RuleType.SPARQL) return;
     const container = document.getElementById('yasgui');
     if (!container) return;
-    // limpiar
+    // 🔥 destruir completamente
     if (this.yasgui) {
+      this.yasgui.destroy?.(); // por si existe
+      this.yasgui = null;
       container.innerHTML = '';
     }
-    // 🔥 IMPORT DINÁMICO
     const Yasgui = (await import('@triply/yasgui')).default;
     this.yasgui = new Yasgui(container, {
       requestConfig: {
         endpoint: this.validateEndpoint || 'http://dbpedia.org/sparql'
-      }
+      },
+      copyEndpointOnNewTab: false,
+      persistencyExpire: 0 // 🔥 importante: evita que recupere queries anteriores
     });
-    if (this.editingRule.content) {
-      this.yasgui.getTab().setQuery(this.editingRule.content);
-    }
+    const tab = this.yasgui.getTab();
+    // 🔥 FORZAR contenido limpio
+    tab.setQuery(this.editingRule.content || '');
   }
   onRuleTypeChange(): void {
     // Esperar a que Angular renderice el nuevo DOM
@@ -237,8 +240,8 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     });
   }
   /* ── Validate ── */
-  openValidateModal(): void { this.showValidateModal = true; this.validateResult = null; }
-  closeValidateModal(): void { this.showValidateModal = false; this.validateResult = null; }
+  openValidateModal(): void {this.showValidateModal.set(true); this.validateResult = null; }
+  closeValidateModal(): void { this.showValidateModal.set(false); this.validateResult = null; }
 
   validateGraph(tipo: 'pdf' | 'csv'): void {
     if (!this.validateEndpoint.trim()) {
@@ -250,6 +253,8 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     this.http.get(url, { responseType: 'blob', observe: 'response' })
       .subscribe({
         next: (res) => {
+          this.closeValidateModal();   // 👈 ahora sí Angular lo detecta
+          document.body.offsetHeight;
           const blob = res.body!;
           // Obtener nombre del fichero desde headers
           let filename = 'validation_report';

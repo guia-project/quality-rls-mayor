@@ -259,7 +259,7 @@
 </div>
 
 <!-- ─── Validate Graph Modal ─── -->
-<div class="modal-overlay" *ngIf="showValidateModal" (click)="closeValidateModal()">
+<div class="modal-overlay" *ngIf="showValidateModal()" (click)="closeValidateModal()">
   <div class="modal modal-validate" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Validar grafo de conocimiento</h2>
