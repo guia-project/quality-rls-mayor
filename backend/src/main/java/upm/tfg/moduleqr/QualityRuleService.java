@@ -119,11 +119,14 @@ public class QualityRuleService {
         return new SparqlEndpoint(configuration);
     }
 
-    //Maybe tengo que ver lo de las queries
     protected String fetchGraphContent(String url) {
         SparqlEndpoint endpoint = createEndpoint(url);
+        String query = """
+                CONSTRUCT {?s ?p ?o}
+                WHERE { ?s ?p ?o}
+                """;
         try {
-        ByteArrayOutputStream res = endpoint.query("TEMPORAL", ResultsFormat.FMT_RDF_TURTLE);
+        ByteArrayOutputStream res = endpoint.query(query, ResultsFormat.FMT_RDF_TURTLE);
         return res.toString();
         }catch (SparqlRemoteEndpointException |SparqlConfigurationException | SparqlQuerySyntaxException e) {
             throw new KnowledgeGraphException("Error al obtener knowledge graph");
