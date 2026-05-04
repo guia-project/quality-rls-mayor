@@ -2,7 +2,6 @@
 
 :host { display: block; height: 100vh; }
 
-// ── Tokens ──────────────────────────────────────────────────────
 $bg:        #FAFAF8;
 $surface:   #FFFFFF;
 $border:    #E8E6E0;
@@ -21,7 +20,6 @@ $red:       #DC2626;
 $red-bg:    #FEF2F2;
 $red-bd:    #FECACA;
 
-// ── Layout ──────────────────────────────────────────────────────
 .qr-shell {
   display: flex;
   height: 100vh;
@@ -31,7 +29,6 @@ $red-bd:    #FECACA;
   overflow: hidden;
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────
 .qr-sidebar {
   width: 204px;
   min-width: 204px;
@@ -90,7 +87,6 @@ $red-bd:    #FECACA;
   border: 1px solid $border;
 }
 
-// ── Main ─────────────────────────────────────────────────────────
 .qr-main {
   flex: 1;
   display: flex;
@@ -136,7 +132,6 @@ $red-bd:    #FECACA;
   gap: 8px;
 }
 
-// ── Buttons ──────────────────────────────────────────────────────
 button, .btn-upload {
   cursor: pointer;
   border: none;
@@ -205,7 +200,6 @@ button, .btn-upload {
   &:hover { background: $bg; color: $text-1; }
 }
 
-// ── Filter bar ───────────────────────────────────────────────────
 .filter-bar {
   display: flex;
   align-items: center;
@@ -281,7 +275,6 @@ button, .btn-upload {
   &.active { background: $text-1; color: #FFF; border-color: $text-1; }
 }
 
-// ── Stats ────────────────────────────────────────────────────────
 .stats-row {
   display: flex;
   gap: 10px;
@@ -307,7 +300,6 @@ button, .btn-upload {
 .stat-value { font-size: 20px; font-weight: 600; line-height: 1; }
 .stat-label { font-size: 10.5px; color: $text-3; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
 
-// ── Table ────────────────────────────────────────────────────────
 .rules-table-wrap {
   flex: 1;
   overflow-y: auto;
@@ -351,7 +343,6 @@ button, .btn-upload {
   td { padding: 12px 14px; vertical-align: middle; }
 }
 
-// Toggle
 .toggle-btn { background: none; border: none; padding: 3px; cursor: pointer; }
 .toggle-dot {
   display: block;
@@ -378,7 +369,6 @@ button, .btn-upload {
   }
 }
 
-// Cells
 .rule-name { display: block; font-size: 13.5px; font-weight: 500; color: $text-1; }
 .rule-id   { display: block; font-size: 10.5px; color: $text-3; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
 .rule-desc { font-size: 12.5px; color: $text-2; max-width: 240px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -437,7 +427,6 @@ button, .btn-upload {
   &:hover { color: $red; background: $red-bg; border-color: $red-bd; }
 }
 
-// Empty state
 .empty-state { text-align: center; padding: 60px 0 !important; }
 .empty-inner {
   display: flex;
@@ -448,7 +437,6 @@ button, .btn-upload {
   p { font-size: 13.5px; }
 }
 
-// ── Modals ───────────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -514,7 +502,6 @@ button, .btn-upload {
   z-index: 2;
 }
 
-// Form
 .form-group {
   display: flex;
   flex-direction: column;
@@ -567,7 +554,6 @@ button, .btn-upload {
   margin-top: -2px;
 }
 
-// Content block
 .content-block {
   background: #F8F7F3;
   border: 1px solid $border;
@@ -584,7 +570,6 @@ button, .btn-upload {
   margin: 0;
 }
 
-// Validate result
 .validate-result { margin-top: 12px; }
 
 .result-badge {
@@ -600,7 +585,7 @@ button, .btn-upload {
 .result-success { background: $green-bg; color: $green;  border: 1px solid $green-bd; }
 .result-error   { background: $red-bg;   color: $red;    border: 1px solid $red-bd;   }
 
-// ── Toast ────────────────────────────────────────────────────────
+
 .toast {
   position: fixed;
   bottom: 24px;
@@ -626,10 +611,10 @@ button, .btn-upload {
 }
 .shacl-editor {
   width: 95%;
-  height: 220px;           /* 🔥 más grande */
+  height: 220px;
   min-height: 180px;
   resize: vertical;
-  font-family: monospace;  /* 🔥 importante para código */
+  font-family: monospace;
   font-size: 13px;
   line-height: 1.4;
   padding: 10px;

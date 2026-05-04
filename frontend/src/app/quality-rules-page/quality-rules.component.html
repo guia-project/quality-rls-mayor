@@ -1,6 +1,5 @@
 <div class="qr-shell">
 
-  <!-- Sidebar -->
   <aside class="qr-sidebar">
     <div class="sidebar-logo">
       <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
@@ -29,10 +28,8 @@
     </nav>
   </aside>
 
-  <!-- Main content -->
   <main class="qr-main">
 
-    <!-- Header -->
     <header class="qr-header">
       <div class="header-left">
         <h1 class="page-title">Reglas de Calidad</h1>
@@ -70,7 +67,6 @@
       </div>
     </header>
 
-    <!-- Filter bar -->
     <div class="filter-bar">
       <div class="search-wrap">
         <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -105,7 +101,6 @@
       </div>
     </div>
 
-    <!-- Stats row -->
     <div class="stats-row">
       <div class="stat-card">
         <span class="stat-value">{{ rules().length }}</span>
@@ -117,7 +112,6 @@
       </div>
     </div>
 
-    <!-- Rules table -->
     <div class="rules-table-wrap">
       <table class="rules-table">
         <thead>
@@ -187,7 +181,6 @@
   </main>
 </div>
 
-<!-- ─── Edit / New Rule Modal ─── -->
 <div class="modal-overlay" *ngIf="showEditModal" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -213,11 +206,9 @@
       </div>
       <div class="form-group">
         <label>Contenido</label>
-        <!-- 🧠 SPARQL → YASGUI -->
         <div *ngIf="editingRule.ruleType === 'SPARQL'">
           <div id="yasgui" style="height: 250px; border: 1px solid #ddd; border-radius: 6px;"></div>
         </div>
-        <!-- 🧠 SHACL → textarea normal -->
         <div *ngIf="editingRule.ruleType !== 'SPARQL'">
    <textarea
      [(ngModel)]="editingRule.content"
@@ -225,7 +216,6 @@
      placeholder="Contenido SHACL (Turtle)...">
 </textarea>
         </div>
-        <!-- contador -->
         <span class="char-counter">
     {{ editingRule.content?.length || 0 }} / 5000
   </span>
@@ -238,7 +228,6 @@
   </div>
 </div>
 
-<!-- ─── Content View Modal ─── -->
 <div class="modal-overlay" *ngIf="showContentModal" (click)="closeContentModal()">
   <div class="modal modal-content-view" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -258,7 +247,6 @@
   </div>
 </div>
 
-<!-- ─── Validate Graph Modal ─── -->
 <div class="modal-overlay" *ngIf="showValidateModal()" (click)="closeValidateModal()">
   <div class="modal modal-validate" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -295,12 +283,10 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" [class.toast-show]="toast.show" [ngClass]="'toast-' + toast.type">
   {{ toast.message }}
 </div>
 
-<!-- ─── About Modal ─── -->
 <div class="modal-overlay" *ngIf="showAboutModal" (click)="closeAboutModal()">
   <div class="modal modal-about" (click)="$event.stopPropagation()">
     <div class="modal-header">

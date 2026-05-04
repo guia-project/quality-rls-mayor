@@ -29,7 +29,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   private readonly API = '/api/qr'
 
 
-  /* ── State ── */
   searchQuery   = signal('');
   activeFilter  = signal('ALL');
   isUploading   = false;
@@ -51,13 +50,10 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
 
   toast = { show: false, message: '', type: 'info' };
 
-  /* ── Enum values exposed to template ── */
   ruleTypes = Object.values(RuleType);
 
-  /* ── Data ── */
   rules = signal<QualityRule[]>([]);
 
-  /* ── Computed ── */
   filteredRules = computed(() =>
     this.rules().filter(r => {
       const matchName   = r.name.toLowerCase().includes(this.searchQuery().toLowerCase());
@@ -80,7 +76,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   trackById(_: number, rule: QualityRule): string { return rule.id; }
 
 
-  /* ── Edit / New ── */
   openNewRule(): void {
     this.editingRule = {
       id:'', name: '', description: '', content: '',
@@ -106,9 +101,8 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     if (!this.editingRule || this.editingRule.ruleType !== RuleType.SPARQL) return;
     const container = document.getElementById('yasgui');
     if (!container) return;
-    // 🔥 destruir completamente
     if (this.yasgui) {
-      this.yasgui.destroy?.(); // por si existe
+      this.yasgui.destroy?.();
       this.yasgui = null;
       container.innerHTML = '';
     }
@@ -118,14 +112,12 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
         endpoint: this.validateEndpoint || 'http://dbpedia.org/sparql'
       },
       copyEndpointOnNewTab: false,
-      persistencyExpire: 0 // 🔥 importante: evita que recupere queries anteriores
+      persistencyExpire: 0
     });
     const tab = this.yasgui.getTab();
-    // 🔥 FORZAR contenido limpio
     tab.setQuery(this.editingRule.content || '');
   }
   onRuleTypeChange(): void {
-    // Esperar a que Angular renderice el nuevo DOM
     setTimeout(() => {
       this.initYasgui();
     }, 0);
@@ -133,7 +125,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
 
   saveRule(): void {
     if (!this.editingRule) return;
-    // 🔥 añadir esto
     if (this.editingRule.ruleType === RuleType.SPARQL && this.yasgui) {
       this.editingRule.content = this.yasgui.getTab().getQuery();
     }
@@ -174,7 +165,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   closeModal(): void {
     this.showEditModal = false;
     this.editingRule = null;
-    // limpiar yasgui
     if (this.yasgui) {
       const container = document.getElementById('yasgui');
       if (container) container.innerHTML = '';
@@ -182,11 +172,9 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     }
   }
 
-  /* ── Content view ── */
   viewContent(rule: QualityRule): void { this.contentViewRule = rule; this.showContentModal = true; }
   closeContentModal(): void { this.showContentModal = false; this.contentViewRule = null; }
 
-  /* ── CSV  ── */
   onCsvUpload(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -198,7 +186,7 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: () => {
           this.showToast('CSV subido correctamente', 'success');
-          this.loadRules(); // refrescar tabla
+          this.loadRules();
           this.isUploading = false;
           (event.target as HTMLInputElement).value = '';
         },
@@ -217,7 +205,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
       next: (res) => {
         const blob = res.body!;
 
-        // Obtener nombre del archivo
         let filename = 'quality_rules.csv';
         const contentDisposition = res.headers.get('Content-Disposition');
 
@@ -226,7 +213,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
           if (match) filename = match[1];
         }
 
-        // Descargar
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
         link.download = filename;
@@ -239,7 +225,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
       }
     });
   }
-  /* ── Validate ── */
   openValidateModal(): void {this.showValidateModal.set(true); this.validateResult = null; }
   closeValidateModal(): void { this.showValidateModal.set(false); this.validateResult = null; }
 
@@ -253,10 +238,9 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     this.http.get(url, { responseType: 'blob', observe: 'response' })
       .subscribe({
         next: (res) => {
-          this.closeValidateModal();   // 👈 ahora sí Angular lo detecta
+          this.closeValidateModal();
           document.body.offsetHeight;
           const blob = res.body!;
-          // Obtener nombre del fichero desde headers
           let filename = 'validation_report';
           const contentDisposition = res.headers.get('Content-Disposition');
 
@@ -266,7 +250,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
           } else {
             filename += tipo === 'pdf' ? '.pdf' : '.csv';
           }
-          // Descargar archivo
           const link = document.createElement('a');
           link.href = window.URL.createObjectURL(blob);
           link.download = filename;
@@ -287,7 +270,6 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
       });
   }
 
-  /* ── Toast ── */
   showToast(message: string, type: 'success' | 'error' | 'info'): void {
     this.toast = { show: true, message, type };
     setTimeout(() => { this.toast = { ...this.toast, show: false }; }, 3000);
@@ -324,15 +306,12 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   }
   private getErrorMessage(err: any): string {
     if (!err) return 'Error desconocido';
-    // Caso 1: backend devuelve texto plano
     if (typeof err.error === 'string') {
       return err.error;
     }
-    // Caso 2: JSON con message
     if (err.error?.message) {
       return err.error.message;
     }
-    // Caso 3: HttpErrorResponse estándar
     if (err.status) {
       return `Error ${err.status}: ${err.statusText || 'Error en servidor'}`;
     }
