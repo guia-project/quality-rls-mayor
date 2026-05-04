@@ -2,6 +2,8 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { AfterViewInit } from '@angular/core';
+import '@triply/yasgui/build/yasgui.min.css';
 
 export enum RuleType {
   SPARQL = 'SPARQL',
@@ -23,7 +25,7 @@ export interface QualityRule {
   templateUrl: './quality-rules.component.html',
   styleUrls: ['./quality-rules.component.scss'],
 })
-export class QualityRulesComponent implements OnInit {
+export class QualityRulesComponent implements OnInit, AfterViewInit {
   private readonly API = '/api/qr'
 
 
@@ -44,6 +46,8 @@ export class QualityRulesComponent implements OnInit {
   validatePayload  = '';
   isValidating     = false;
   validateResult:  { status: 'success' | 'error'; message: string } | null = null;
+
+  yasgui: any = null;
 
   toast = { show: false, message: '', type: 'info' };
 
@@ -71,6 +75,7 @@ export class QualityRulesComponent implements OnInit {
   ngOnInit(): void {
     this.loadRules();
   }
+  ngAfterViewInit(): void {}
 
   trackById(_: number, rule: QualityRule): string { return rule.id; }
 
@@ -82,6 +87,7 @@ export class QualityRulesComponent implements OnInit {
       ruleType: RuleType.SPARQL
     };
     this.showEditModal = true;
+    setTimeout(() => this.initYasgui(), 0);
   }
 
   createRule(rule: QualityRule) {
@@ -94,10 +100,40 @@ export class QualityRulesComponent implements OnInit {
   editRule(rule: QualityRule): void {
     this.editingRule = { ...rule };
     this.showEditModal = true;
+    setTimeout(() => this.initYasgui(), 0);
+  }
+  async initYasgui(): Promise<void> {
+    if (!this.editingRule || this.editingRule.ruleType !== RuleType.SPARQL) return;
+    const container = document.getElementById('yasgui');
+    if (!container) return;
+    // limpiar
+    if (this.yasgui) {
+      container.innerHTML = '';
+    }
+    // 🔥 IMPORT DINÁMICO
+    const Yasgui = (await import('@triply/yasgui')).default;
+    this.yasgui = new Yasgui(container, {
+      requestConfig: {
+        endpoint: this.validateEndpoint || 'http://dbpedia.org/sparql'
+      }
+    });
+    if (this.editingRule.content) {
+      this.yasgui.getTab().setQuery(this.editingRule.content);
+    }
+  }
+  onRuleTypeChange(): void {
+    // Esperar a que Angular renderice el nuevo DOM
+    setTimeout(() => {
+      this.initYasgui();
+    }, 0);
   }
 
   saveRule(): void {
     if (!this.editingRule) return;
+    // 🔥 añadir esto
+    if (this.editingRule.ruleType === RuleType.SPARQL && this.yasgui) {
+      this.editingRule.content = this.yasgui.getTab().getQuery();
+    }
     if (!this.editingRule.name.trim()) { this.showToast('El nombre es requerido', 'error'); return; }
     if ((this.editingRule.content?.length ?? 0) > 5000) { this.showToast('Contenido excede 5000 caracteres', 'error'); return; }
     const isEdit = !!this.editingRule.id;
@@ -132,7 +168,16 @@ export class QualityRulesComponent implements OnInit {
     });
   }
 
-  closeModal(): void { this.showEditModal = false; this.editingRule = null; }
+  closeModal(): void {
+    this.showEditModal = false;
+    this.editingRule = null;
+    // limpiar yasgui
+    if (this.yasgui) {
+      const container = document.getElementById('yasgui');
+      if (container) container.innerHTML = '';
+      this.yasgui = null;
+    }
+  }
 
   /* ── Content view ── */
   viewContent(rule: QualityRule): void { this.contentViewRule = rule; this.showContentModal = true; }

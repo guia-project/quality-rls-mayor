@@ -25,7 +25,8 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/@triply/yasgui/build/yasgui.min.css"
             ]
           },
           "configurations": {

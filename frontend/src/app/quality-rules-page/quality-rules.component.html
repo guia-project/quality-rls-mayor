@@ -202,7 +202,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Tipo de regla</label>
-          <select [(ngModel)]="editingRule.ruleType">
+          <select [(ngModel)]="editingRule.ruleType" (change)="onRuleTypeChange()">
             <option *ngFor="let t of ruleTypes" [value]="t">{{ t }}</option>
           </select>
         </div>
@@ -213,8 +213,22 @@
       </div>
       <div class="form-group">
         <label>Contenido</label>
-        <textarea [(ngModel)]="editingRule.content" rows="5" placeholder="Contenido de la regla (hasta 5000 caracteres)..."></textarea>
-        <span class="char-counter">{{ editingRule.content?.length || 0 }} / 5000</span>
+        <!-- 🧠 SPARQL → YASGUI -->
+        <div *ngIf="editingRule.ruleType === 'SPARQL'">
+          <div id="yasgui" style="height: 250px; border: 1px solid #ddd; border-radius: 6px;"></div>
+        </div>
+        <!-- 🧠 SHACL → textarea normal -->
+        <div *ngIf="editingRule.ruleType !== 'SPARQL'">
+   <textarea
+     [(ngModel)]="editingRule.content"
+     class="shacl-editor"
+     placeholder="Contenido SHACL (Turtle)...">
+</textarea>
+        </div>
+        <!-- contador -->
+        <span class="char-counter">
+    {{ editingRule.content?.length || 0 }} / 5000
+  </span>
       </div>
     </div>
     <div class="modal-footer">

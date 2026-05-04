@@ -467,6 +467,9 @@ button, .btn-upload {
   width: 500px;
   box-shadow: 0 20px 48px rgba(0,0,0,.12);
   animation: fadeUp .18s ease;
+  max-height: 90vh;   /* clave */
+  display: flex;
+  flex-direction: column;
 
   &.modal-validate   { width: 520px; }
   &.modal-content-view { width: 560px; }
@@ -498,12 +501,17 @@ button, .btn-upload {
   &:hover { color: $text-1; }
 }
 
-.modal-body { padding: 18px 22px; }
+.modal-body { padding: 18px 22px;overflow-y: auto;flex: 1; }
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   padding: 0 22px 20px;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid #eee;
+  z-index: 2;
 }
 
 // Form
@@ -615,4 +623,16 @@ button, .btn-upload {
 .modal-about {
   max-width: 400px;
   text-align: center;
+}
+.shacl-editor {
+  width: 95%;
+  height: 220px;           /* 🔥 más grande */
+  min-height: 180px;
+  resize: vertical;
+  font-family: monospace;  /* 🔥 importante para código */
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
 }
