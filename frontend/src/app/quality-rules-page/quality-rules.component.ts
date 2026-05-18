@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AfterViewInit } from '@angular/core';
 import '@triply/yasgui/build/yasgui.min.css';
+import { ViewEncapsulation } from '@angular/core';
 
 export enum RuleType {
   SPARQL = 'SPARQL',
@@ -24,6 +25,7 @@ export interface QualityRule {
   imports: [CommonModule, FormsModule],
   templateUrl: './quality-rules.component.html',
   styleUrls: ['./quality-rules.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class QualityRulesComponent implements OnInit, AfterViewInit {
   private readonly API = '/api/qr'
@@ -98,24 +100,41 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.initYasgui(), 0);
   }
   async initYasgui(): Promise<void> {
-    if (!this.editingRule || this.editingRule.ruleType !== RuleType.SPARQL) return;
-    const container = document.getElementById('yasgui');
-    if (!container) return;
-    if (this.yasgui) {
-      this.yasgui.destroy?.();
-      this.yasgui = null;
-      container.innerHTML = '';
+    try {
+      if (!this.editingRule || this.editingRule.ruleType !== RuleType.SPARQL) return;
+
+      const container = document.getElementById('yasgui');
+      if (!container) return;
+
+      if (this.yasgui) {
+        this.yasgui.destroy?.();
+        this.yasgui = null;
+        container.innerHTML = '';
+      }
+
+      const Yasgui = (await import('@triply/yasgui')).default;
+
+      this.yasgui = new Yasgui(container, {
+        copyEndpointOnNewTab: false,
+        persistencyExpire: 0,
+        populateFromUrl: false,
+        autofocus: false,
+
+        requestConfig: {
+          endpoint: ''
+        },
+
+        yasqe: {
+          showQueryButton: false
+        }
+      });
+
+      const tab = this.yasgui.getTab();
+      tab.setQuery(this.editingRule.content || '');
+
+    } catch (error) {
+      console.error('Error inicializando YASGUI', error);
     }
-    const Yasgui = (await import('@triply/yasgui')).default;
-    this.yasgui = new Yasgui(container, {
-      requestConfig: {
-        endpoint: this.validateEndpoint || 'http://dbpedia.org/sparql'
-      },
-      copyEndpointOnNewTab: false,
-      persistencyExpire: 0
-    });
-    const tab = this.yasgui.getTab();
-    tab.setQuery(this.editingRule.content || '');
   }
   onRuleTypeChange(): void {
     setTimeout(() => {

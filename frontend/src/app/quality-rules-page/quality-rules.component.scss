@@ -621,3 +621,53 @@ button, .btn-upload {
   border-radius: 6px;
   border: 1px solid #ddd;
 }
+#yasgui .yasqe_queryButton {
+  display: none !important;
+}
+
+#yasgui .controlbar {
+  display: none !important;
+}
+
+#yasgui .yasqe_share {
+  display: none !important;
+}
+
+#yasgui .yasr {
+  display: none !important;
+}
+
+#yasgui .yasr_header {
+  display: none !important;
+}
+
+#yasgui .tabPanel {
+  border-bottom: none !important;
+}
+#yasgui .autocompleteWrapper {
+  display: none !important;
+}
+
+#yasgui .yasqe .controlbar {
+  display: none !important;
+}
+
+#yasgui .tabsList,
+#yasgui .tabList,
+#yasgui .tabs,
+#yasgui .tabPanelHeader,
+#yasgui .tabPanel .tabs,
+#yasgui ul,
+#yasgui .yasgui ul,
+#yasgui .yasgui .tabsList {
+  display: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+}
+
+#yasgui .tabPanel {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+}
