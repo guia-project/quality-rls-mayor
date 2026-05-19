@@ -283,8 +283,10 @@
   </div>
 </div>
 
-<div class="toast" [class.toast-show]="toast.show" [ngClass]="'toast-' + toast.type">
-  {{ toast.message }}
+<div class="toast"
+     [class.toast-show]="toast().show"
+     [ngClass]="'toast-' + toast().type">
+  {{ toast().message }}
 </div>
 
 <div class="modal-overlay" *ngIf="showAboutModal" (click)="closeAboutModal()">
@@ -302,6 +304,11 @@
         <p>Gestión de reglas SPARQL / SHACL</p>
         <p>Validación de grafos</p>
       </div>
+      <p>
+        Este servicio se enmarca en el contexto del proyecto
+        <a href="https://guia-project.github.io/" target="_blank" rel="noopener noreferrer">GUIA</a>
+        (M230020126A-AJCA).
+      </p>
     </div>
 
     <div class="modal-footer">

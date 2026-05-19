@@ -50,7 +50,7 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
 
   yasgui: any = null;
 
-  toast = { show: false, message: '', type: 'info' };
+  toast = signal({ show: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
   ruleTypes = Object.values(RuleType);
 
@@ -88,10 +88,10 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   }
 
   createRule(rule: QualityRule) {
-    return this.http.post<void>(this.API, this.mapToDto(rule));
+    return this.http.post(this.API, this.mapToDto(rule),{responseType:'text'});
   }
   updateRule(rule: QualityRule) {
-    return this.http.put<void>(`${this.API}/${rule.id}`, this.mapToDto(rule));
+    return this.http.put(`${this.API}/${rule.id}`, this.mapToDto(rule),{responseType:'text'});
   }
 
   editRule(rule: QualityRule): void {
@@ -290,8 +290,17 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   }
 
   showToast(message: string, type: 'success' | 'error' | 'info'): void {
-    this.toast = { show: true, message, type };
-    setTimeout(() => { this.toast = { ...this.toast, show: false }; }, 3000);
+    this.toast.set({
+      show: true,
+      message,
+      type
+    });
+    setTimeout(() => {
+      this.toast.update(t => ({
+        ...t,
+        show: false
+      }));
+    }, 3000);
   }
 
   openAbout(): void {

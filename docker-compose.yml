@@ -6,7 +6,7 @@ services:
     build: ./backend
     container_name: spring-backend
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     volumes:
       - h2-data:/app/data
     environment:
@@ -17,7 +17,7 @@ services:
     build: ./frontend
     container_name: angular-frontend
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
     depends_on:
       - backend
     restart: unless-stopped
