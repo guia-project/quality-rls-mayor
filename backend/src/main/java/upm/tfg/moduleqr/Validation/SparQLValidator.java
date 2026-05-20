@@ -39,7 +39,7 @@ public class SparQLValidator implements QRValidator {
                 return queryExec.execAsk();
             } else if (query.isSelectType()) {
                 ResultSet res = queryExec.execSelect();
-                return !res.hasNext();
+                return res.hasNext();
             }else{
                 throw new IllegalArgumentException("Unsupported query type");
             }
