@@ -258,18 +258,6 @@
         <label>Endpoint</label>
         <input type="url" [(ngModel)]="validateEndpoint" placeholder="https://example.com/"/>
       </div>
-
-      <div class="validate-result" *ngIf="validateResult">
-        <div class="result-badge" [class]="'result-' + validateResult.status">
-          <svg *ngIf="validateResult.status==='success'" width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <svg *ngIf="validateResult.status==='error'" width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          {{ validateResult.message }}
-        </div>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" (click)="closeValidateModal()">Cancelar</button>

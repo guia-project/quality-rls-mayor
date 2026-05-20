@@ -46,7 +46,7 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
   validateEndpoint = '';
   validatePayload  = '';
   isValidating     = false;
-  validateResult:  { status: 'success' | 'error'; message: string } | null = null;
+
 
   yasgui: any = null;
 
@@ -244,49 +244,85 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
       }
     });
   }
-  openValidateModal(): void {this.showValidateModal.set(true); this.validateResult = null; }
-  closeValidateModal(): void { this.showValidateModal.set(false); this.validateResult = null; }
+  openValidateModal(): void {this.showValidateModal.set(true);  }
+  closeValidateModal(): void { this.showValidateModal.set(false);  }
 
   validateGraph(tipo: 'pdf' | 'csv'): void {
+
     if (!this.validateEndpoint.trim()) {
       this.showToast('Introduce un endpoint válido', 'error');
       return;
     }
-    this.isValidating = true;
-    const url = `${this.API}/validate?url=${encodeURIComponent(this.validateEndpoint)}&tipo=${tipo}`;
-    this.http.get(url, { responseType: 'blob', observe: 'response' })
-      .subscribe({
-        next: (res) => {
-          this.closeValidateModal();
-          document.body.offsetHeight;
-          const blob = res.body!;
-          let filename = 'validation_report';
-          const contentDisposition = res.headers.get('Content-Disposition');
 
-          if (contentDisposition) {
-            const match = contentDisposition.match(/filename="(.+)"/);
-            if (match) filename = match[1];
-          } else {
-            filename += tipo === 'pdf' ? '.pdf' : '.csv';
+    this.isValidating = true;
+
+    const url =
+      `${this.API}/validate?url=${encodeURIComponent(this.validateEndpoint)}&tipo=${tipo}`;
+
+    this.http.get(url, {
+      responseType: 'blob',
+      observe: 'response'
+    }).subscribe({
+
+      next: (res) => {
+
+        const blob = res.body!;
+
+        let filename = 'validation_report';
+
+        const contentDisposition =
+          res.headers.get('Content-Disposition');
+
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="(.+)"/);
+
+          if (match) {
+            filename = match[1];
           }
-          const link = document.createElement('a');
-          link.href = window.URL.createObjectURL(blob);
-          link.download = filename;
-          link.click();
-          this.validateResult = {
-            status: 'success',
-            message: 'Validación completada y descargada'
-          };
-          this.isValidating = false;
-        },
-        error: (err) => {
-          this.validateResult = {
-            status: 'error',
-            message: this.getErrorMessage(err)
-          };
-          this.isValidating = false;
+        } else {
+          filename += tipo === 'pdf' ? '.pdf' : '.csv';
         }
-      });
+
+        const link = document.createElement('a');
+
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+
+        link.click();
+
+        this.showToast('Validación completada y descargada', 'success');
+
+        this.closeValidateModal();
+
+        this.isValidating = false;
+      },
+
+      error: async (err) => {
+
+        let errorMessage: string;
+
+        if (err.error instanceof Blob) {
+
+          const text = await err.error.text();
+
+          try {
+            const json = JSON.parse(text);
+            errorMessage = json.message || json.error || text;
+          } catch {
+            errorMessage = text;
+          }
+
+        } else {
+          errorMessage = this.getErrorMessage(err);
+        }
+
+
+
+        this.showToast(errorMessage, 'error');
+
+        this.isValidating = false;
+      }
+    });
   }
 
   showToast(message: string, type: 'success' | 'error' | 'info'): void {
