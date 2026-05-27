@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr.Validation;
+package upm.tfg.moduleqr.validation;
 
 import org.junit.jupiter.api.Test;
 import upm.tfg.moduleqr.model.RuleType;

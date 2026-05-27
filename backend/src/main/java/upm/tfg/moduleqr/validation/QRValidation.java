@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr.Validation;
+package upm.tfg.moduleqr.validation;
 
 import org.springframework.stereotype.Service;
 import upm.tfg.moduleqr.model.RuleType;

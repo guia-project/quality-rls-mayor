@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr.Validation;
+package upm.tfg.moduleqr.validation;
 
 import upm.tfg.moduleqr.model.RuleType;
 

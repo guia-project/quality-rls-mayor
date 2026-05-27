@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import upm.tfg.moduleqr.model.QrDto;
 import upm.tfg.moduleqr.model.QualityRule;
 import upm.tfg.moduleqr.model.RuleType;
+import upm.tfg.moduleqr.service.QualityRuleService;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;

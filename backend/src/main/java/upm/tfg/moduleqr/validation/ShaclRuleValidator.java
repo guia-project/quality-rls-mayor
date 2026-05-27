@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr.Validation;
+package upm.tfg.moduleqr.validation;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;

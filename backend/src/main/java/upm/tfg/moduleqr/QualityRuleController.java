@@ -1,11 +1,13 @@
 package upm.tfg.moduleqr;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import upm.tfg.moduleqr.model.QrDto;
 import upm.tfg.moduleqr.model.QualityRule;
+import upm.tfg.moduleqr.service.QualityRuleService;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/qr")
+@Slf4j
 public class QualityRuleController {
 
     private final QualityRuleService service;
@@ -23,14 +26,14 @@ public class QualityRuleController {
 
     @PostMapping
     public ResponseEntity<Void> createQualityRule(@RequestBody QrDto request) {
-        System.out.println("Create Quality Rule");
+        log.info("Create Quality Rule");
         service.createQualityRule(request.getContent(),request.getType(),request.getName(),request.getDescription());
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(@PathVariable String id, @RequestBody QrDto dto) {
-        System.out.println("Update Quality Rule");
+        log.info("Update Quality Rule");
         service.updateQualityRule(id, dto);
         return ResponseEntity.noContent().build();
     }
@@ -38,20 +41,20 @@ public class QualityRuleController {
 
     @GetMapping()
     public ResponseEntity<List<QualityRule>> getQualityRules() {
-        System.out.println("Get Quality Rules");
+        log.info("Get Quality Rules");
         return ResponseEntity.ok(service.getQualityRules());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity <Void> deleteGraph(@PathVariable String id) {
-        System.out.println("Delete Quality Rule");
+        log.info("Delete Quality Rule");
         service.deleteQualityRule(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/validate")
     public ResponseEntity<InputStreamResource> validateGraph(@RequestParam String url, @RequestParam String tipo) {
-        System.out.println("Validate Quality Rule");
+        log.info("Validate Quality Rule");
         ByteArrayInputStream stream = service.validateGraph(url, tipo);
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
@@ -79,7 +82,7 @@ public class QualityRuleController {
 
     @PostMapping("/upload")
     public ResponseEntity<Void> upload(@RequestParam MultipartFile file) {
-        System.out.println("Upload Quality Rule");
+        log.info("Upload Quality Rule");
         service.createQrFromCsv(file);
         return ResponseEntity.noContent().build();
 
@@ -87,7 +90,7 @@ public class QualityRuleController {
 
     @GetMapping("/export")
     public ResponseEntity<InputStreamResource> exportCsv(){
-        System.out.println("Export Quality Rule");
+        log.info("Export Quality Rule");
         ByteArrayInputStream csv = service.exportQrToCsv();
         String filename = "quality_rules_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".csv";
         return ResponseEntity.ok()
