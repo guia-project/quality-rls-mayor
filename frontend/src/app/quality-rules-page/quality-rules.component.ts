@@ -155,7 +155,7 @@ export class QualityRulesComponent implements OnInit, AfterViewInit {
       : this.createRule(this.editingRule);
     request.subscribe({
       next: () => {
-        this.showToast('Regla creada', 'success');
+        this.showToast(isEdit ? 'Regla actualizada': 'Regla creada', 'success');
         this.loadRules();
         this.closeModal();
       },

@@ -1,4 +1,4 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.service;
 
 
 import org.apache.jena.rdf.model.*;
@@ -13,11 +13,9 @@ import upm.tfg.documentmanager.PdfService;
 import upm.tfg.exception.DocumentGenerationException;
 import upm.tfg.exception.KnowledgeGraphException;
 import upm.tfg.exception.NotFoundException;
-import upm.tfg.moduleqr.Validation.QRValidation;
-import upm.tfg.moduleqr.model.QrDto;
-import upm.tfg.moduleqr.model.QualityRule;
-import upm.tfg.moduleqr.model.RuleType;
-import upm.tfg.moduleqr.model.ValidationResult;
+import upm.tfg.moduleqr.QualityRuleRepository;
+import upm.tfg.moduleqr.model.*;
+import upm.tfg.moduleqr.validation.QRValidation;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -43,7 +41,7 @@ public class QualityRuleService {
     private final PdfService pdfService;
 
     private final CsvService csvService;
-
+    
     public QualityRuleService(QRValidation validator, QualityRuleRepository repository, PdfService pdfService, CsvService csvService) {
         this.validator = validator;
         this.repository = repository;
@@ -64,6 +62,9 @@ public class QualityRuleService {
     }
 
     public void updateQualityRule(String id, QrDto dto) {
+        if (!validator.validateRule(dto.getContent(), dto.getType())){
+            throw new IllegalArgumentException("Quality Rule invalido");
+        }
         QualityRule rule = getQualityRule(id);
         rule.setName(dto.getName());
         rule.setDescription(dto.getDescription());
@@ -86,17 +87,12 @@ public class QualityRuleService {
         List<ValidationResult> results = new ArrayList<>();
 
         for (QualityRule rule : rules) {
-            boolean passed;
-            String message;
-            passed = validator.validateKnowledgeGraph(graphContent, rule.getContent(), rule.getRuleType());
-            message = passed ? "El Knowledge Graph CUMPLE la regla." : "El Knowledge Graph NO CUMPLE la regla.";
             results.add(new ValidationResult(
                     rule.getId(),
                     rule.getName(),
                     rule.getRuleType(),
                     rule.getDescription(),
-                    passed,
-                    message));
+                    validator.validateKnowledgeGraph(graphContent, rule.getContent(), rule.getRuleType())));
         }
         try {
             if ("pdf".equalsIgnoreCase(tipo)) {
@@ -169,7 +165,7 @@ public class QualityRuleService {
             log.info("Query ejecutada");
             return convertJsonToTurtle(response.body());
         }catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error(e.getMessage());
             throw new KnowledgeGraphException("Error al obtener knowledge graph");
         }
     }

@@ -1,17 +1,17 @@
-package upm.tfg.moduleqr;
+package upm.tfg.moduleqr.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import upm.tfg.documentmanager.CsvService;
 import upm.tfg.documentmanager.PdfService;
 import upm.tfg.exception.NotFoundException;
-import upm.tfg.moduleqr.Validation.QRValidation;
+import upm.tfg.moduleqr.QualityRuleRepository;
+import upm.tfg.moduleqr.validation.QRValidation;
 import upm.tfg.moduleqr.model.QrDto;
 import upm.tfg.moduleqr.model.QualityRule;
 import upm.tfg.moduleqr.model.RuleType;
@@ -112,7 +112,7 @@ class QualityRuleServiceTest {
 
     @Test
     void validateGraph_pdf_ok() {
-        QualityRuleService spy = Mockito.spy(service);
+        QualityRuleService spy = spy(service);
         doReturn("graph").when(spy).fetchGraphContent(any());
         when(repository.findAll()).thenReturn(List.of(rule));
         when(validator.validateKnowledgeGraph(any(), any(), any())).thenReturn(true);
@@ -126,7 +126,7 @@ class QualityRuleServiceTest {
 
     @Test
     void validateGraph_csv_ok() {
-        QualityRuleService spy = Mockito.spy(service);
+        QualityRuleService spy = spy(service);
         doReturn("graph").when(spy).fetchGraphContent(any());
         when(repository.findAll()).thenReturn(List.of(rule));
         when(validator.validateKnowledgeGraph(any(), any(), any())).thenReturn(true);
@@ -139,7 +139,7 @@ class QualityRuleServiceTest {
 
     @Test
     void validateGraph_documentError() {
-        QualityRuleService spy = Mockito.spy(service);
+        QualityRuleService spy = spy(service);
         doReturn("graph").when(spy).fetchGraphContent(any());
         when(repository.findAll()).thenReturn(List.of(rule));
         when(validator.validateKnowledgeGraph(any(), any(), any())).thenReturn(true);
