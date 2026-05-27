@@ -1,8 +1,10 @@
 package upm.tfg.moduleqr.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class ValidationResult {
 
     private final String   ruleId;
@@ -10,15 +12,5 @@ public class ValidationResult {
     private final RuleType ruleType;
     private final String   description;
     private final boolean  passed;
-    private final String   message;
 
-    public ValidationResult(String ruleId, String ruleName, RuleType ruleType,
-                            String description, boolean passed, String message) {
-        this.ruleId      = ruleId;
-        this.ruleName    = ruleName;
-        this.ruleType    = ruleType;
-        this.description = description;
-        this.passed      = passed;
-        this.message     = message;
-    }
 }

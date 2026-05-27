@@ -68,15 +68,14 @@ public class CsvService {
                 new OutputStreamWriter(out, StandardCharsets.UTF_8));
              CSVPrinter csv = new CSVPrinter(writer,
                      CSVFormat.DEFAULT.withHeader(
-                             "ruleId", "ruleName", "ruleType", "description", "passed", "message"))) {
+                             "ruleId", "ruleName", "ruleType", "description", "passed"))) {
             for (ValidationResult r : results) {
                 csv.printRecord(
                         r.getRuleId(),
                         r.getRuleName(),
                         r.getRuleType().name(),
                         r.getDescription(),
-                        r.isPassed() ? "PASS" : "FAIL",
-                        r.getMessage());
+                        r.isPassed() ? "PASS" : "FAIL");
             }
             csv.flush();
         }catch (IOException e) {
