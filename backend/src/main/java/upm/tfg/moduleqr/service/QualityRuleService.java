@@ -2,8 +2,6 @@ package upm.tfg.moduleqr.service;
 
 
 import org.apache.jena.rdf.model.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import sparql.streamline.core.SparqlEndpoint;
@@ -41,12 +39,15 @@ public class QualityRuleService {
     private final PdfService pdfService;
 
     private final CsvService csvService;
-    
-    public QualityRuleService(QRValidation validator, QualityRuleRepository repository, PdfService pdfService, CsvService csvService) {
+    private final JsonToModelService jsonToModelService;
+
+
+    public QualityRuleService(QRValidation validator, QualityRuleRepository repository, PdfService pdfService, CsvService csvService, JsonToModelService jsonToModelService) {
         this.validator = validator;
         this.repository = repository;
         this.pdfService = pdfService;
         this.csvService = csvService;
+        this.jsonToModelService = jsonToModelService;
     }
 
     public void createQualityRule(String content, RuleType type, String name, String description) {
@@ -155,7 +156,6 @@ public class QualityRuleService {
                     .timeout(Duration.ofSeconds(30))
                     .build();
 
-            log.info("Ejecutando query");
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
@@ -169,72 +169,8 @@ public class QualityRuleService {
             throw new KnowledgeGraphException("Error al obtener knowledge graph");
         }
     }
-    private String convertJsonToTurtle(String jsonResults) {
-        try {
-            JSONObject json = new JSONObject(jsonResults);
-            JSONArray bindings = json.getJSONObject("results").getJSONArray("bindings");
-
-            Model model = ModelFactory.createDefaultModel();
-
-            log.info("Procesando bindings");
-
-            for (int i = 0; i < bindings.length(); i++) {
-                JSONObject binding = bindings.getJSONObject(i);
-
-                Resource subject = createResource(model, binding.getJSONObject("s"));
-                Property predicate = createProperty(model, binding.getJSONObject("p"));
-                RDFNode object = createRDFNode(model, binding.getJSONObject("o"));
-
-                model.add(subject, predicate, object);
-            }
-
-            StringWriter writer = new StringWriter();
-            model.write(writer, "TURTLE");
-
-            log.info("Conversion completa");
-            return writer.toString();
-
-        } catch (Exception e) {
-            log.error("Error convirtiendo JSON a Turtle", e);
-            throw new KnowledgeGraphException("Error procesando resultados: " + e.getMessage());
-        }
-    }
-
-    private Resource createResource(Model model, JSONObject node) {
-        String type = node.getString("type");
-        String value = node.getString("value");
-
-        if ("uri".equals(type)) {
-            return model.createResource(value);
-        } else if ("bnode".equals(type)) {
-            return model.createResource(AnonId.create(value));
-        }
-        throw new IllegalArgumentException("Tipo de sujeto no soportado: " + type);
-    }
-
-    private Property createProperty(Model model, JSONObject node) {
-        return model.createProperty(node.getString("value"));
-    }
-
-    private RDFNode createRDFNode(Model model, JSONObject node) {
-        String type = node.getString("type");
-        String value = node.getString("value");
-
-        switch (type) {
-            case "uri":
-                return model.createResource(value);
-            case "bnode":
-                return model.createResource(AnonId.create(value));
-            case "literal":
-                if (node.has("datatype")) {
-                    return model.createTypedLiteral(value, node.getString("datatype"));
-                } else if (node.has("xml:lang")) {
-                    return model.createLiteral(value, node.getString("xml:lang"));
-                } else {
-                    return model.createLiteral(value);
-                }
-            default:
-                throw new IllegalArgumentException("Tipo de nodo no soportado: " + type);
-        }
+    private String convertJsonToTurtle(String json) {
+        Model model = jsonToModelService.convertJsonToModel(json);
+        return jsonToModelService.convertModelToRdfString(model);
     }
 }
