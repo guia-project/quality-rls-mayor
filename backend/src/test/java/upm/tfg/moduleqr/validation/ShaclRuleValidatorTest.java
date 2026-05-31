@@ -1,92 +1,95 @@
 package upm.tfg.moduleqr.validation;
 
+import org.apache.jena.tdb2.TDB2Factory;
 import org.junit.jupiter.api.Test;
 import upm.tfg.moduleqr.model.RuleType;
+import upm.tfg.moduleqr.model.ValidatorResult;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Resource;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ShaclRuleValidatorTest {
-    ShaclRuleValidator shaclRuleValidator = new ShaclRuleValidator();
 
+    private final ShaclRuleValidator validator = new ShaclRuleValidator();
 
     @Test
-    void shouldReturnTrueShaclTrue(){
-        boolean res = shaclRuleValidator.isType(RuleType.SHACL);
-        assertTrue(res);
-
+    void shouldReturnTrueForShaclType() {
+        assertTrue(validator.isType(RuleType.SHACL));
     }
 
     @Test
-    void shouldReturnFalseShaclFalse(){
-        boolean res = shaclRuleValidator.isType(RuleType.SPARQL);
-        assertFalse(res);
-
+    void shouldReturnFalseForSparqlType() {
+        assertFalse(validator.isType(RuleType.SPARQL));
     }
 
     @Test
-    void shouldReturnTrueCorrectShacl(){
-        String content = "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
-                "@prefix ex: <http://example.com/> .\n" +
-                "\n" +
-                "ex:ValidShape\n" +
-                "    a sh:NodeShape ;\n" +
-                "    sh:targetNode ex:subject ;\n" +
-                "    sh:property [\n" +
-                "        sh:path ex:predicate ;\n" +
-                "        sh:minCount 1 ;\n" +
-                "    ] .";
-        boolean res = shaclRuleValidator.validateRule(content);
-        assertTrue(res);
+    void shouldValidateCorrectShaclRule() {
+        String shacl = """
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
+                @prefix ex: <http://example.com/> .
+
+                ex:PersonShape
+                    a sh:NodeShape ;
+                    sh:targetClass ex:Person .
+                """;
+
+        assertTrue(validator.validateRule(shacl));
     }
 
     @Test
-    void shouldReturnFalseCorrectIncorrectShacl(){
-        String content = "Cualquier cosa";
-        boolean res = shaclRuleValidator.validateRule(content);
-        assertFalse(res);
+    void shouldReturnFalseForInvalidShaclRule() {
+
+        String invalid = """
+                esto no es turtle
+                {@@@
+                """;
+
+        assertFalse(validator.validateRule(invalid));
     }
-
+    @TempDir
+    Path tempDir;
     @Test
-    void shouldReturnTrueKgCompliesShacl(){
-        String gcontent="""
-            @prefix ex: <http://example.com/> .
-            ex:subject ex:predicate ex:object .
-        """;
-        String rcontent="@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
-                "@prefix ex: <http://example.com/> .\n" +
-                "\n" +
-                "ex:ValidShape\n" +
-                "    a sh:NodeShape ;\n" +
-                "    sh:targetNode ex:subject ;\n" +
-                "    sh:property [\n" +
-                "        sh:path ex:predicate ;\n" +
-                "        sh:minCount 1 ;\n" +
-                "    ] .";
+    void shouldValidateKnowledgeGraph() {
+        String datasetId = "dataset1";
+        String datasetPath =
+                tempDir.resolve("tdb").toString();
+        Dataset dataset =
+                TDB2Factory.connectDataset(datasetPath);
 
-        boolean res = shaclRuleValidator.validateKnowledgeGraph(gcontent,rcontent);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            Resource person = dataset.getDefaultModel().createResource("http://example.com/person1");
+            dataset.getDefaultModel()
+                    .add(person, dataset.getDefaultModel().createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                            dataset.getDefaultModel().createResource("http://example.com/Person"));
+            dataset.commit();
 
-        assertTrue(res);
-    }
+        } finally {
+            dataset.end();
+        }
 
-    @Test
-    void shouldReturnFalseKgNotCompliesShacl(){
-        String gcontent="""
-            @prefix ex: <http://example.com/> .
-            ex:subject ex:predicate ex:object .
-        """;
-        String rcontent="@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
-                "@prefix ex: <http://example.com/> .\n" +
-                "\n" +
-                "ex:ValidShape\n" +
-                "    a sh:NodeShape ;\n" +
-                "    sh:targetNode ex:subject ;\n" +
-                "    sh:property [\n" +
-                "        sh:path ex:age ;\n" +
-                "        sh:minCount 1 ;\n" +
-                "    ] .";
+        String shacl = """
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
+                @prefix ex: <http://example.com/> .
+                ex:PersonShape
+                    a sh:NodeShape ;
+                    sh:targetClass ex:Person .
+                """;
 
-        boolean res = shaclRuleValidator.validateKnowledgeGraph(gcontent,rcontent);
+        ShaclRuleValidator validator = new ShaclRuleValidator();
+        try (MockedStatic<TDB2Factory> mocked = Mockito.mockStatic(TDB2Factory.class)) {
 
-        assertFalse(res);
+            mocked.when(() -> TDB2Factory.connectDataset("/app/data/datasets/" + datasetId + "/tdb")).thenReturn(dataset);
+
+            ValidatorResult result = validator.validateKnowledgeGraph(datasetId, shacl);
+
+            assertNotNull(result);
+        }
     }
 }

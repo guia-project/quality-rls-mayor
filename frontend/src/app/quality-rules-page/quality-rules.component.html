@@ -18,6 +18,14 @@
         </svg>
         Reglas
       </a>
+      <a class="nav-item" (click)="goToDatasets()">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <ellipse cx="8" cy="4.5" rx="5.5" ry="2" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M2.5 4.5v3c0 1.1 2.46 2 5.5 2s5.5-.9 5.5-2v-3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M2.5 7.5v3c0 1.1 2.46 2 5.5 2s5.5-.9 5.5-2v-3" stroke="currentColor" stroke-width="1.4"/>
+        </svg>
+        Datasets
+      </a>
       <a class="nav-item" (click)="openAbout()">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
           <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
@@ -33,39 +41,48 @@
     <header class="qr-header">
       <div class="header-left">
         <h1 class="page-title">Reglas de Calidad</h1>
-        <span class="rule-count">{{ filteredRules().length }} reglas</span>
-      </div>
-      <div class="header-actions">
-        <label class="btn-upload" [class.uploading]="isUploading">
-          <input type="file" accept=".csv" (change)="onCsvUpload($event)" hidden/>
-          <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-            <path d="M7.5 1v9M4 6l3.5-4 3.5 4M2 11h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          {{ isUploading ? 'Subiendo...' : 'Subir CSV' }}
-        </label>
-        <button class="btn-upload" (click)="exportCsv()">
-          <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-            <path d="M7.5 14V5M11 9L7.5 13 4 9M2 3h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-
-          Descargar CSV
-
-        </button>
-        <button class="btn-validate" (click)="openValidateModal()">
-          <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-            <circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Validar Grafo
-        </button>
-        <button class="btn-primary" (click)="openNewRule()">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          Nueva regla
-        </button>
       </div>
     </header>
+
+    <!-- Dataset import panel -->
+    <div class="import-panel">
+      <div class="import-panel-inner">
+        <div class="import-label">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <ellipse cx="8" cy="4.5" rx="5.5" ry="2" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M2.5 4.5v3c0 1.1 2.46 2 5.5 2s5.5-.9 5.5-2v-3" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M2.5 7.5v3c0 1.1 2.46 2 5.5 2s5.5-.9 5.5-2v-3" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+          <span>Importar Dataset</span>
+        </div>
+        <div class="import-fields">
+          <input
+            class="import-input"
+            type="text"
+            placeholder="Nombre del dataset..."
+            [(ngModel)]="importDatasetName"
+          />
+          <input
+            class="import-input import-input-url"
+            type="url"
+            placeholder="https://endpoint.example.com/sparql"
+            [(ngModel)]="importEndpointUrl"
+          />
+          <button
+            class="btn-import"
+            [class.loading]="isImporting"
+            [disabled]="isImporting"
+            (click)="importDataset()"
+          >
+            <svg *ngIf="!isImporting" width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1v9M4 7l3 4 3-4M2 13h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="import-spinner" *ngIf="isImporting"></span>
+            {{ isImporting ? 'Importando...' : 'Importar' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div class="filter-bar">
       <div class="search-wrap">
@@ -181,6 +198,7 @@
   </main>
 </div>
 
+<!-- Edit / New Rule Modal -->
 <div class="modal-overlay" *ngIf="showEditModal" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -210,15 +228,15 @@
           <div id="yasgui" style="height: 250px; border: 1px solid #ddd; border-radius: 6px;"></div>
         </div>
         <div *ngIf="editingRule.ruleType !== 'SPARQL'">
-   <textarea
-     [(ngModel)]="editingRule.content"
-     class="shacl-editor"
-     placeholder="Contenido SHACL (Turtle)...">
-</textarea>
+          <textarea
+            [(ngModel)]="editingRule.content"
+            class="shacl-editor"
+            placeholder="Contenido SHACL (Turtle)...">
+          </textarea>
         </div>
         <span class="char-counter">
-    {{ editingRule.content?.length || 0 }} / 5000
-  </span>
+          {{ editingRule.content?.length || 0 }} / 5000
+        </span>
       </div>
     </div>
     <div class="modal-footer">
@@ -228,6 +246,7 @@
   </div>
 </div>
 
+<!-- View Content Modal -->
 <div class="modal-overlay" *ngIf="showContentModal" (click)="closeContentModal()">
   <div class="modal modal-content-view" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -247,43 +266,13 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showValidateModal()" (click)="closeValidateModal()">
-  <div class="modal modal-validate" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Validar grafo de conocimiento</h2>
-      <button class="modal-close" (click)="closeValidateModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Endpoint</label>
-        <input type="url" [(ngModel)]="validateEndpoint" placeholder="https://example.com/"/>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-ghost" (click)="closeValidateModal()">Cancelar</button>
-      <button class="btn-validate" [disabled]="isValidating" (click)="validateGraph('pdf')">
-        {{ isValidating ? 'Generando PDF...' : 'Descargar PDF' }}
-      </button>
-      <button class="btn-validate" [disabled]="isValidating" (click)="validateGraph('csv')">
-        {{ isValidating ? 'Generando CSV...' : 'Descargar CSV' }}
-      </button>
-    </div>
-  </div>
-</div>
-
-<div class="toast"
-     [class.toast-show]="toast().show"
-     [ngClass]="'toast-' + toast().type">
-  {{ toast().message }}
-</div>
-
+<!-- About Modal -->
 <div class="modal-overlay" *ngIf="showAboutModal" (click)="closeAboutModal()">
   <div class="modal modal-about" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>About</h2>
       <button class="modal-close" (click)="closeAboutModal()">×</button>
     </div>
-
     <div class="modal-body">
       <p><strong>QualityGraph</strong></p>
       <p>Aplicación para gestión y validación de grafos de conocimiento</p>
@@ -293,14 +282,24 @@
         <p>Validación de grafos</p>
       </div>
       <p>
+        Autor :
+        <a href="https://www.linkedin.com/in/pedromf485" target="_blank" rel="noopener noreferrer">Pedro Mellado Fuenmayor</a>
+      </p>
+      <p>
         Este servicio se enmarca en el contexto del proyecto
         <a href="https://guia-project.github.io/" target="_blank" rel="noopener noreferrer">GUIA</a>
         (M230020126A-AJCA).
       </p>
     </div>
-
     <div class="modal-footer">
       <button class="btn-primary" (click)="closeAboutModal()">Cerrar</button>
     </div>
   </div>
+</div>
+
+<!-- Toast -->
+<div class="toast"
+     [class.toast-show]="toast().show"
+     [ngClass]="'toast-' + toast().type">
+  {{ toast().message }}
 </div>

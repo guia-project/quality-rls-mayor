@@ -17,6 +17,9 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 public class PdfService {
 
@@ -36,9 +39,9 @@ public class PdfService {
                 String.format("Resultado global: %d/%d reglas superadas", passed, results.size()))
                 .setFontSize(11).setBold());
         document.add(new Paragraph(" "));
-        Table table = new Table(UnitValue.createPercentArray(new float[]{2, 2, 4, 2})).useAllAvailableWidth();
+        Table table = new Table(UnitValue.createPercentArray(new float[]{2, 2, 4, 2,5})).useAllAvailableWidth();
 
-        for (String header : new String[]{"Nombre", "Tipo", "Descripción", "Resultado"}) {
+        for (String header : new String[]{"Nombre", "Tipo", "Descripción", "Resultado","Resultado Select"}) {
             table.addHeaderCell(new Cell()
                     .add(new Paragraph(header).setBold())
                     .setBackgroundColor(ColorConstants.LIGHT_GRAY));
@@ -51,10 +54,24 @@ public class PdfService {
                     new Paragraph(r.isPassed() ? "PASS" : "✘ FAIL").setBold());
             statusCell.setFontColor(r.isPassed() ? ColorConstants.GREEN : ColorConstants.RED);
             table.addCell(statusCell);
+            String selectResults =formatQueryResults(r);
+            table.addCell(selectResults);
         }
         document.add(table);
         document.close();
 
         return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    private String formatQueryResults(ValidationResult result) {
+        if (result.getQueryResults() == null) {
+            return "";
+        }
+
+        return result.getQueryResults()
+                .stream()
+                .limit(10)
+                .map(Map::toString)
+                .collect(Collectors.joining(" | "));
     }
 }

@@ -1,6 +1,7 @@
 package upm.tfg.moduleqr.validation;
 
 import upm.tfg.moduleqr.model.RuleType;
+import upm.tfg.moduleqr.model.ValidatorResult;
 
 public interface QRValidator {
 
@@ -8,5 +9,5 @@ public interface QRValidator {
 
     boolean validateRule(String content);
 
-    boolean validateKnowledgeGraph(String graphContent, String qrContent);
+    ValidatorResult validateKnowledgeGraph(String datasetId, String qrContent);
 }

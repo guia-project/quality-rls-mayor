@@ -2,6 +2,7 @@ package upm.tfg.moduleqr.validation;
 
 import org.springframework.stereotype.Service;
 import upm.tfg.moduleqr.model.RuleType;
+import upm.tfg.moduleqr.model.ValidatorResult;
 
 import java.util.List;
 
@@ -26,13 +27,13 @@ public class QRValidation {
     }
 
 
-    public boolean validateKnowledgeGraph(String graphContent,String qrContent, RuleType ruleType) {
+    public ValidatorResult validateKnowledgeGraph(String datasetId, String qrContent, RuleType ruleType) {
         QRValidator validator = validators.stream()
                 .filter(v -> v.isType(ruleType))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No validator found"));
 
-        return validator.validateKnowledgeGraph(graphContent,qrContent);
+        return validator.validateKnowledgeGraph(datasetId,qrContent);
 
     }
 

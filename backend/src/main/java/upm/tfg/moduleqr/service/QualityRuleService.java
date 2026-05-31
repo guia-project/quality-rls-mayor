@@ -1,30 +1,21 @@
 package upm.tfg.moduleqr.service;
 
 
-import org.apache.jena.rdf.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import sparql.streamline.core.SparqlEndpoint;
-import sparql.streamline.core.SparqlEndpointConfiguration;
 import upm.tfg.documentmanager.CsvService;
 import upm.tfg.documentmanager.PdfService;
 import upm.tfg.exception.DocumentGenerationException;
-import upm.tfg.exception.KnowledgeGraphException;
 import upm.tfg.exception.NotFoundException;
-import upm.tfg.moduleqr.QualityRuleRepository;
+import upm.tfg.modulekg.model.Dataset;
+import upm.tfg.modulekg.repository.DatasetRepository;
+import upm.tfg.moduleqr.repository.QualityRuleRepository;
 import upm.tfg.moduleqr.model.*;
 import upm.tfg.moduleqr.validation.QRValidation;
 import lombok.extern.slf4j.Slf4j;
 
 
 import java.io.*;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,26 +27,35 @@ public class QualityRuleService {
 
     private final QRValidation validator;
     private final QualityRuleRepository repository;
+    private final DatasetRepository datasetRepository;
     private final PdfService pdfService;
 
     private final CsvService csvService;
-    private final JsonToModelService jsonToModelService;
 
 
-    public QualityRuleService(QRValidation validator, QualityRuleRepository repository, PdfService pdfService, CsvService csvService, JsonToModelService jsonToModelService) {
+    public QualityRuleService(QRValidation validator, QualityRuleRepository repository, DatasetRepository datasetRepository, PdfService pdfService, CsvService csvService) {
         this.validator = validator;
         this.repository = repository;
+        this.datasetRepository = datasetRepository;
         this.pdfService = pdfService;
         this.csvService = csvService;
-        this.jsonToModelService = jsonToModelService;
     }
 
-    public void createQualityRule(String content, RuleType type, String name, String description) {
+    public void createQualityRule(String content, RuleType type, String name, String description,String datasetId)
+    {
+        Dataset dataset = datasetRepository.findById(datasetId)
+                .orElseThrow(()->new NotFoundException("Dataset no encontrado"));
         if (!validator.validateRule(content, type)) {
             throw new IllegalArgumentException("Quality Rule invalido");
         }
-        QualityRule qr = new QualityRule(content, type, name, description);
+        QualityRule qr = new QualityRule(content, type, name, description,dataset);
+
         repository.save(qr);
+    }
+    public QualityRule toggleRule(String id) {
+        QualityRule rule = getQualityRule(id);
+        rule.setEnabled(!rule.isEnabled());
+        return repository.save(rule);
     }
 
     public QualityRule getQualityRule(String id) {
@@ -78,22 +78,41 @@ public class QualityRuleService {
         return repository.findAll();
     }
 
+    public List<QualityRule> getDtsetQualityRules(String datasetId) {
+        Dataset dataset =datasetRepository
+                .findById(datasetId)
+                .orElseThrow(() -> new NotFoundException("Dataset no encontrado"));
+
+        return dataset.getRules();
+    }
+
     public void deleteQualityRule(String id) {
         repository.delete(getQualityRule(id));
     }
 
-    public ByteArrayInputStream validateGraph(String url, String tipo) {
-        String graphContent = fetchGraphContent(url);
-        List<QualityRule> rules = repository.findAll();
+    public ByteArrayInputStream validateGraph(String datasetId, String tipo) {
+        Dataset dataset =datasetRepository
+                        .findById(datasetId)
+                        .orElseThrow(() -> new NotFoundException("Dataset no encontrado"));
+
+        List<QualityRule> rules =dataset.getRules()
+                .stream()
+                .filter(QualityRule ::isEnabled)
+                .toList();
+        if (rules.isEmpty()) throw new IllegalStateException("No hay reglas activas para validar");
         List<ValidationResult> results = new ArrayList<>();
 
         for (QualityRule rule : rules) {
-            results.add(new ValidationResult(
-                    rule.getId(),
-                    rule.getName(),
-                    rule.getRuleType(),
-                    rule.getDescription(),
-                    validator.validateKnowledgeGraph(graphContent, rule.getContent(), rule.getRuleType())));
+            ValidatorResult res = validator.validateKnowledgeGraph(datasetId,rule.getContent(),rule.getRuleType());
+            results.add(ValidationResult.builder()
+                    .ruleId(rule.getId())
+                    .ruleName(rule.getName())
+                    .ruleType(rule.getRuleType())
+                    .description(rule.getDescription())
+                    .passed(res.isPassed())
+                    .queryResults(res.getQueryResults())
+                    .build()
+            );
         }
         try {
             if ("pdf".equalsIgnoreCase(tipo)) {
@@ -107,70 +126,15 @@ public class QualityRuleService {
     }
 
 
-    public void createQrFromCsv(MultipartFile file){
-        List<QrDto> rules = csvService.createFromCsv(file);
+    public void createQrFromCsv(MultipartFile file, String datasetId) {
+        List<QrDto> rules = csvService.createFromCsv(file,datasetId);
         for (QrDto qr : rules) {
-            createQualityRule(qr.getContent(), qr.getType(), qr.getName(), qr.getDescription());
+            createQualityRule(qr.getContent(), qr.getType(), qr.getName(), qr.getDescription(), qr.getDatasetId());
         }
     }
 
-    public ByteArrayInputStream exportQrToCsv(){
-        return csvService.exportToCsv(repository.findAll());
+    public ByteArrayInputStream exportQrToCsv(String datasetId) {
+        return csvService.exportToCsv(getDtsetQualityRules(datasetId));
     }
 
-    private SparqlEndpoint createEndpoint(String url) {
-        SparqlEndpointConfiguration configuration = new SparqlEndpointConfiguration();
-        configuration.setEndpointQuery(url);
-        return new SparqlEndpoint(configuration);
-    }
-
-    protected String fetchGraphContent(String url) {
-        //SparqlEndpoint endpoint = createEndpoint(url);
-        String query = """
-            SELECT ?s ?p ?o
-            FROM <https://guia-kg.skai.etsisi.upm.es/data>
-            WHERE { ?s ?p ?o }
-            LIMIT 10000
-            """;
-
-        try {
-            log.info("Obteniendo el graph desde: {}", url);
-            /*
-            log.info("Ejecutando query");
-            ByteArrayOutputStream res = endpoint.query(query,ResultsFormat.FMT_NONE);
-            log.info("Query ejecutada");
-            String pr = res.toString();
-
-             */
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-            String fullUrl = url + "?query=" + encodedQuery;
-
-
-            HttpClient client = HttpClient.newBuilder()
-                    .build();
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(fullUrl))
-                    .header("Accept", "application/sparql-results+json")
-                    .GET()
-                    .timeout(Duration.ofSeconds(30))
-                    .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() != 200) {
-                log.error("Error HTTP {}: {}", response.statusCode(), response.body());
-                throw new KnowledgeGraphException("Error HTTP: " + response.statusCode());
-            }
-            log.info("Query ejecutada");
-            return convertJsonToTurtle(response.body());
-        }catch (Exception e) {
-            log.error(e.getMessage());
-            throw new KnowledgeGraphException("Error al obtener knowledge graph");
-        }
-    }
-    private String convertJsonToTurtle(String json) {
-        Model model = jsonToModelService.convertJsonToModel(json);
-        return jsonToModelService.convertModelToRdfString(model);
-    }
 }

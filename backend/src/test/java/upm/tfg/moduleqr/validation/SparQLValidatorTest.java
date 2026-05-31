@@ -1,114 +1,152 @@
 package upm.tfg.moduleqr.validation;
 
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.tdb2.TDB2Factory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import upm.tfg.moduleqr.model.RuleType;
+import upm.tfg.moduleqr.model.ValidatorResult;
+
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SparQLValidatorTest {
-    SparQLValidator validator = new SparQLValidator();
+
+    private final SparQLValidator validator = new SparQLValidator();
 
     @Test
-    void shouldReturnTrueSparqlTrue(){
-        boolean res = validator.isType(RuleType.SPARQL);
-        assertTrue(res);
-
+    void shouldReturnTrueForSparqlType() {
+        assertTrue(validator.isType(RuleType.SPARQL));
     }
 
     @Test
-    void shouldReturnFalseSparqlFalse(){
-        boolean res = validator.isType(RuleType.SHACL);
-        assertFalse(res);
-
+    void shouldReturnFalseForShaclType() {
+        assertFalse(validator.isType(RuleType.SHACL));
     }
 
     @Test
-    void shouldReturnTrueCorrectSparql(){
-        String content = "PREFIX ex: <http://example.com/>\n" +
-                "\n" +
-                "ASK {\n" +
-                "    ex:subject ex:predicate ?o .\n" +
-                "}";
-        boolean res = validator.validateRule(content);
-        assertTrue(res);
+    void shouldValidateCorrectQuery() {
+        String query = """
+                SELECT * WHERE {
+                    ?s ?p ?o
+                }
+                """;
+        assertTrue(validator.validateRule(query));
     }
 
     @Test
-    void shouldReturnFalseCorrectIncorrectSparql(){
-        String content = "Cualquier cosa";
-        boolean res = validator.validateRule(content);
-        assertFalse(res);
+    void shouldReturnFalseForInvalidQuery() {
+        String query = """
+                ESTO NO ES SPARQL
+                """;
+        assertFalse(validator.validateRule(query));
+    }
+
+    @TempDir
+    Path tempDir;
+    @Test
+    void shouldValidateKnowledgeGraphWithAskQuery() {
+        String datasetId = "dataset1";
+        String datasetPath = tempDir.resolve("tdb").toString();
+
+        Dataset dataset = TDB2Factory.connectDataset(datasetPath);
+
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            Resource person = dataset.getDefaultModel().createResource("http://example.com/person1");
+
+            dataset.getDefaultModel()
+                    .add(person, dataset.getDefaultModel().createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                            dataset.getDefaultModel().createResource("http://example.com/Person"));
+            dataset.commit();
+        } finally {
+            dataset.end();
+        }
+
+        String askQuery = """
+                ASK {
+                    ?s ?p ?o
+                }
+                """;
+
+        try (MockedStatic<TDB2Factory> mocked = Mockito.mockStatic(TDB2Factory.class)) {
+
+            mocked.when(() -> TDB2Factory.connectDataset("/app/data/datasets/" + datasetId + "/tdb")).thenReturn(dataset);
+
+            ValidatorResult result = validator.validateKnowledgeGraph(datasetId, askQuery);
+
+            assertNotNull(result);
+            assertTrue(result.isPassed());
+            assertNull(result.getQueryResults());
+        }
     }
 
     @Test
-    void shouldReturnTrueKgCompliesAskSparql(){
-        String gcontent="""
-            @prefix ex: <http://example.com/> .
-            ex:subject ex:predicate ex:object .
-        """;
-        String rcontent="PREFIX ex: <http://example.com/>\n" +
-                "\n" +
-                "ASK {\n" +
-                "    ex:subject ex:predicate ?o .\n" +
-                "}";
+    void shouldValidateKnowledgeGraphWithSelectQuery() {
 
-        boolean res = validator.validateKnowledgeGraph(gcontent,rcontent);
+        String datasetId = "dataset1";
+        String datasetPath = tempDir.resolve("tdb-select").toString();
+        Dataset dataset = TDB2Factory.connectDataset(datasetPath);
+        dataset.begin(ReadWrite.WRITE);
 
-        assertTrue(res);
+        try {
+            Resource person = dataset.getDefaultModel().createResource("http://example.com/person1");
+
+            dataset.getDefaultModel()
+                    .add(person, dataset.getDefaultModel().createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                            dataset.getDefaultModel().createResource("http://example.com/Person"));
+
+            dataset.commit();
+        } finally {
+            dataset.end();
+        }
+
+        String selectQuery = """
+                SELECT ?s
+                WHERE {
+                    ?s ?p ?o
+                }
+                """;
+
+        try (MockedStatic<TDB2Factory> mocked = Mockito.mockStatic(TDB2Factory.class)) {
+
+            mocked.when(() -> TDB2Factory.connectDataset("/app/data/datasets/" + datasetId + "/tdb")).thenReturn(dataset);
+
+            ValidatorResult result = validator.validateKnowledgeGraph(datasetId, selectQuery);
+
+            assertNotNull(result);
+            assertTrue(result.isPassed());
+            assertNotNull(result.getQueryResults());
+            assertFalse(result.getQueryResults().isEmpty());
+        }
     }
 
     @Test
-    void shouldReturnFalseKgNotCompliesAskSparql(){
-        String gcontent="""
-            @prefix ex: <http://example.com/> .
-            ex:subject ex:predicate ex:object .
-        """;
-        String rcontent="PREFIX ex: <http://example.com/>\n" +
-                "\n" +
-                "ASK {\n" +
-                "    ex:subject ex:age ?o .\n" +
-                "}";
+    void shouldThrowExceptionForUnsupportedQueryType() {
 
-        boolean res = validator.validateKnowledgeGraph(gcontent,rcontent);
+        String datasetId = "dataset1";
+        String datasetPath = tempDir.resolve("tdb-construct").toString();
+        Dataset dataset = TDB2Factory.connectDataset(datasetPath);
 
-        assertFalse(res);
-    }
+        String constructQuery = """
+                CONSTRUCT {
+                    ?s ?p ?o
+                }
+                WHERE {
+                    ?s ?p ?o
+                }
+                """;
 
-    @Test
-    void shouldReturnTrueKgCompliesSelectSparql(){
-        String gcontent="""
-            @prefix ex: <http://example.com/> .
-            ex:subject ex:predicate ex:object .
-        """;
-        String rcontent="PREFIX ex: <http://example.com/>\n" +
-                "\n" +
-                "SELECT ?s WHERE {\n" +
-                "    FILTER NOT EXISTS {\n" +
-                "        ex:subject ex:predicate ?o .\n" +
-                "    }\n" +
-                "}";
+        try (MockedStatic<TDB2Factory> mocked = Mockito.mockStatic(TDB2Factory.class)) {
 
-        boolean res = validator.validateKnowledgeGraph(gcontent,rcontent);
+            mocked.when(() -> TDB2Factory.connectDataset("/app/data/datasets/" + datasetId + "/tdb")).thenReturn(dataset);
 
-        assertTrue(res);
-    }
-
-    @Test
-    void shouldReturnFalseKgNotCompliesSelectSparql(){
-        String gcontent="""
-            @prefix ex: <http://example.com/> .
-            ex:subject ex:predicate ex:object .
-        """;
-        String rcontent="PREFIX ex: <http://example.com/>\n" +
-                "\n" +
-                "SELECT ?s WHERE {\n" +
-                "    FILTER NOT EXISTS {\n" +
-                "        ex:subject ex:age ?o .\n" +
-                "    }\n" +
-                "}";
-
-        boolean res = validator.validateKnowledgeGraph(gcontent,rcontent);
-
-        assertFalse(res);
+            assertThrows(IllegalArgumentException.class, () -> validator.validateKnowledgeGraph(datasetId, constructQuery));
+        }
     }
 }
