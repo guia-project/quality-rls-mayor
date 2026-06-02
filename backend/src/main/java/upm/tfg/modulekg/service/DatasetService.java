@@ -33,7 +33,6 @@ public class DatasetService {
 
     public void createDataset(String datasetName, String datasetUrl, String datasetId){
         fetchGraphContent(datasetUrl, datasetId);
-        log.info("Fetch Dataset finished");
         Dataset dataset = Dataset.builder()
                         .id(datasetId)
                         .name(datasetName)
@@ -42,7 +41,7 @@ public class DatasetService {
         repository.save(dataset);
     }
     private void fetchGraphContent(String url,String datasetId) {
-        log.info("Fetch Dataset start");
+
         String query = "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }";
 
         try {
@@ -59,20 +58,19 @@ public class DatasetService {
                     .header("Accept", "text/turtle")
                     .GET()
                     .build();
-            log.info("cosas de path");
+
             Path datasetFolder = Paths.get("/app/data/datasets/" + datasetId);
             Files.createDirectories(datasetFolder);
             Path outputPath = datasetFolder.resolve("kg.ttl");
             log.info("Obteniendo el graph desde: {}", fullUrl);
             HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(outputPath));
-            log.info("Se quedo aca");
             if (response.statusCode() != 200) {
                 log.error("Error HTTP {}: {}", response.statusCode(), response.body());
                 throw new KnowledgeGraphException("Error HTTP: " + response.statusCode());
             }
-            log.info("Query ejecutada");
+
             importDataset(datasetId);
-            log.info("Import completo");
+
         }catch (Exception e) {
             log.error(e.getMessage());
             throw new KnowledgeGraphException("Error al obtener knowledge graph");
@@ -89,12 +87,10 @@ public class DatasetService {
         try {
             Model model = dataset.getDefaultModel();
             if (!model.isEmpty()) {
-                log.info("Dataset {} ya importado", datasetId);
                 dataset.commit();
                 return;
             }
 
-            log.info("Importando dataset {}", datasetId);
             RDFDataMgr.read(model, Files.newInputStream(ttlPath), Lang.TURTLE
             );
             dataset.commit();

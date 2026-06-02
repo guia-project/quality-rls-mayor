@@ -22,7 +22,6 @@ public class DatasetController {
     @PostMapping
     public ResponseEntity<String> createDataset(@RequestBody DatasetRequest request) {
         String datasetId = UUID.randomUUID().toString();
-        log.info("name"+request.getName()+" endpointUrl"+request.getEndpointUrl());
         service.createDataset(request.getName(), request.getEndpointUrl(),datasetId);
         return ResponseEntity.ok("Dataset creado correctamente ID: "+ datasetId);
     }
