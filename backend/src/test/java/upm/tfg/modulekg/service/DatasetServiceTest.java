@@ -78,25 +78,6 @@ class DatasetServiceTest {
     }
 
     @Test
-    void getDataset_existingId_returnsDataset() {
-        when(repository.findById("test-id-123")).thenReturn(Optional.of(dataset));
-
-        Dataset result = service.getDataset("test-id-123");
-
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo("test-id-123");
-    }
-
-    @Test
-    void getDataset_notFound_throwsNotFoundException() {
-        when(repository.findById("no-existe")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> service.getDataset("no-existe"))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("no-existe");
-    }
-
-    @Test
     void deleteDataset_existingId_callsRepositoryDelete() {
         when(repository.findById("test-id-123")).thenReturn(Optional.of(dataset));
         doNothing().when(repository).delete(dataset);

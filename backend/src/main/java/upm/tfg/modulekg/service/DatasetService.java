@@ -109,11 +109,8 @@ public class DatasetService {
     public Dataset getKnowledgeGraph(String id) {
         return repository.findById(id).orElseThrow(() -> new NotFoundException("Dataset con id " + id + " no encontrado"));
     }
-    public Dataset getDataset(String id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Dataset con id " + id + " no encontrado"));
-    }
 
     public void deleteDataset(String id) {
-        repository.delete(getDataset(id));
+        repository.delete(getKnowledgeGraph(id));
     }
 }
