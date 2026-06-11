@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-:host { display: block; height: 100vh; }
+:host { display: block; height: 100%; }
 
 $bg:        #FAFAF8;
 $surface:   #FFFFFF;
@@ -22,11 +22,11 @@ $red-bd:    #FECACA;
 
 .qr-shell {
   display: flex;
-  height: 100vh;
+  height: 100%;
   background: $bg;
   color: $text-1;
   font-family: 'Instrument Sans', system-ui, sans-serif;
-  overflow: hidden;
+
 }
 
 .qr-sidebar {
@@ -91,7 +91,6 @@ $red-bd:    #FECACA;
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .qr-header {
@@ -303,7 +302,6 @@ button, .btn-upload {
 .rules-table-wrap {
   flex: 1;
   overflow-y: auto;
-  padding: 0 28px 28px;
   background: $bg;
 
   &::-webkit-scrollbar { width: 5px; }

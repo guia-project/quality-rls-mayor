@@ -1,0 +1,11 @@
+.page-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
