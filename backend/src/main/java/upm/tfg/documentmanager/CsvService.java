@@ -49,14 +49,13 @@ public class CsvService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
-             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("id", "name", "description", "ruleType", "content"))) {
+             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("name","description", "content","ruleType"))) {
             for (QualityRule qr : rules) {
                 csvPrinter.printRecord(
-                        qr.getId(),
                         qr.getName(),
                         qr.getDescription(),
-                        qr.getRuleType().name(),
-                        qr.getContent()
+                        qr.getContent(),
+                        qr.getRuleType().name()
                 );
             }
             csvPrinter.flush();
@@ -97,8 +96,7 @@ public class CsvService {
 
         return result.getQueryResults()
                 .stream()
-                .limit(10)
                 .map(Map::toString)
-                .collect(Collectors.joining(" | "));
+                .collect(Collectors.joining("\n"));
     }
 }

@@ -70,8 +70,7 @@ public class PdfService {
 
         return result.getQueryResults()
                 .stream()
-                .limit(10)
                 .map(Map::toString)
-                .collect(Collectors.joining(" | "));
+                .collect(Collectors.joining("\n"));
     }
 }
